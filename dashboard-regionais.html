@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudo Performance Regionais — Medicamental 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root{
+    --azul:#0b3d68; --azul2:#155a94; --azul-claro:#2f7fc4;
+    --verde:#3aa757; --verde2:#57bd72; --vermelho:#d1443c; --amarelo:#e0a63c;
+    --cinza-bg:#eef1f4; --cinza-card:#ffffff; --cinza-borda:#d8dee5;
+    --txt:#1f2a37; --txt2:#5b6773; --header:#0b3d68;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--cinza-bg);color:var(--txt);font-size:14px}
+  header.top{background:var(--header);color:#fff;padding:16px 26px;display:flex;align-items:center;gap:18px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header.top .logo{font-size:22px;font-weight:800;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+  header.top .sub{font-size:13px;opacity:.85;border-left:1px solid rgba(255,255,255,.3);padding-left:18px}
+  .tabs{display:flex;flex-wrap:wrap;gap:4px;background:var(--azul);padding:0 20px}
+  .tabs button{background:transparent;color:#cfe0ef;border:none;padding:13px 18px;font-size:13.5px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;transition:.15s}
+  .tabs button:hover{color:#fff;background:rgba(255,255,255,.06)}
+  .tabs button.active{color:#fff;border-bottom-color:#7fc4ff;background:rgba(255,255,255,.10)}
+  main{padding:22px;max-width:1400px;margin:0 auto}
+  .panel{display:none;animation:fade .25s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.section{font-size:19px;color:var(--azul);margin-bottom:4px;font-weight:700}
+  p.lead{color:var(--txt2);margin-bottom:18px;font-size:13px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+  .kpi{background:var(--cinza-card);border:1px solid var(--cinza-borda);border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);border-top:4px solid var(--azul2)}
+  .kpi.green{border-top-color:var(--verde)}
+  .kpi.red{border-top-color:var(--vermelho)}
+  .kpi.amber{border-top-color:var(--amarelo)}
+  .kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--txt2);font-weight:700}
+  .kpi .value{font-size:26px;font-weight:800;color:var(--azul);margin-top:6px;line-height:1.1}
+  .kpi .value.green{color:var(--verde)}
+  .kpi .value.red{color:var(--vermelho)}
+  .kpi .foot{font-size:11.5px;color:var(--txt2);margin-top:5px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+  .grid1{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:22px}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--cinza-card);border:1px solid var(--cinza-borda);border-radius:10px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .card h3{font-size:14px;color:var(--azul);margin-bottom:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .card h3 .tag{font-size:10px;background:var(--azul);color:#fff;padding:3px 8px;border-radius:12px;font-weight:600}
+  .chart-wrap{position:relative;height:300px}
+  .chart-wrap.tall{height:360px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap}
+  th{background:var(--azul);color:#fff;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0}
+  td:first-child,th:first-child{text-align:left}
+  tr:hover td{background:#f4f8fc}
+  tr.total td{font-weight:800;color:var(--azul);border-top:2px solid var(--azul);background:#eaf2fa}
+  .pos{color:var(--verde);font-weight:600}
+  .neg{color:var(--vermelho);font-weight:600}
+  .table-scroll{overflow-x:auto;border:1px solid var(--cinza-borda);border-radius:10px}
+  .toggle-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .toggle-row button{background:#fff;border:1px solid var(--cinza-borda);color:var(--txt2);padding:7px 16px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .toggle-row button.active{background:var(--azul);color:#fff;border-color:var(--azul)}
+  .note{font-size:11.5px;color:var(--txt2);font-style:italic;margin-top:8px}
+  .aviso{background:#fcf1dd;border:1px solid #e6c68a;color:#8a6a1e;border-radius:8px;padding:10px 14px;font-size:12.5px;margin-bottom:16px}
+  footer{text-align:center;color:var(--txt2);font-size:11.5px;padding:24px}
+  .mgr-bar{display:flex;gap:8px;background:#e8edf2;padding:12px 22px;border-bottom:1px solid var(--cinza-borda);align-items:center;flex-wrap:wrap}
+  .mgr-bar .mgr-title{font-size:12px;font-weight:800;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;margin-right:8px}
+  .mgr-bar button{background:#fff;border:1px solid var(--cinza-borda);color:var(--azul);padding:9px 24px;border-radius:22px;font-size:13.5px;font-weight:700;cursor:pointer;transition:.15s}
+  .mgr-bar button:hover{border-color:var(--azul2)}
+  .mgr-bar button.active{background:var(--azul);color:#fff;border-color:var(--azul);box-shadow:0 2px 6px rgba(11,61,104,.25)}
+  .mgr-bar button .badge-vazio{font-size:9px;background:#d8dee5;color:#5b6773;border-radius:8px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+  .placeholder-box{background:#fff;border:2px dashed var(--cinza-borda);border-radius:14px;padding:70px 34px;text-align:center;color:var(--txt2)}
+  .placeholder-box h2{color:var(--azul);margin-bottom:10px;font-size:22px}
+  .placeholder-box p{max-width:640px;margin:0 auto;font-size:14px;line-height:1.6}
+  .home-btn{margin-left:auto;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px}
+  .home-btn:hover{background:rgba(255,255,255,.22)}
+  /* ===== Capa ===== */
+  #cover{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(140deg,#04182e 0%,#072741 45%,#0a3557 100%);color:#fff;text-align:center;padding:30px;overflow:hidden;transition:opacity .6s ease,visibility .6s ease}
+  #cover.hide{opacity:0;visibility:hidden}
+  .cover-bg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+  .cover-inner{position:relative;z-index:2;max-width:780px}
+  .cover-wordmark{font-size:30px;font-weight:800;letter-spacing:.5px;margin-bottom:10px}
+  .cover-tag{display:inline-block;background:rgba(127,196,255,.14);border:1px solid rgba(127,196,255,.45);color:#bfe0fb;padding:6px 18px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+  .cover-rule{width:64px;height:4px;background:#7fc4ff;border-radius:3px;margin:22px auto}
+  .cover-title{font-size:44px;font-weight:800;line-height:1.12;margin-bottom:14px}
+  .cover-sub{font-size:17px;opacity:.9;font-weight:500;margin-bottom:6px}
+  .cover-period{font-size:14px;opacity:.75;letter-spacing:.5px;text-transform:uppercase}
+  .cover-mgrs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:30px 0 34px}
+  .cover-mgrs span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:8px 18px;border-radius:22px;font-size:13.5px;font-weight:700}
+  .cover-mgrs span.ativo{background:#7fc4ff;color:#0b3d68;border-color:#7fc4ff}
+  .cover-btn{background:#fff;color:#0b3d68;border:none;padding:15px 46px;border-radius:30px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:.15s}
+  .cover-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.32)}
+  .cover-foot{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:11.5px;opacity:.6;z-index:2}
+</style>
+</head>
+<body>
+<div id="cover">
+  <svg class="cover-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7fc4ff" stop-opacity="0.22"/><stop offset="100%" stop-color="#7fc4ff" stop-opacity="0"/></linearGradient></defs>
+    <g stroke="#7fc4ff" stroke-opacity="0.08" stroke-width="1">
+      <line x1="0" y1="150" x2="1440" y2="150"/><line x1="0" y1="300" x2="1440" y2="300"/><line x1="0" y1="450" x2="1440" y2="450"/><line x1="0" y1="600" x2="1440" y2="600"/><line x1="0" y1="750" x2="1440" y2="750"/>
+      <line x1="180" y1="0" x2="180" y2="900"/><line x1="360" y1="0" x2="360" y2="900"/><line x1="540" y1="0" x2="540" y2="900"/><line x1="720" y1="0" x2="720" y2="900"/><line x1="900" y1="0" x2="900" y2="900"/><line x1="1080" y1="0" x2="1080" y2="900"/><line x1="1260" y1="0" x2="1260" y2="900"/>
+    </g>
+    <g fill="#7fc4ff" fill-opacity="0.09"><rect x="90" y="700" width="46" height="150"/><rect x="170" y="640" width="46" height="210"/><rect x="250" y="690" width="46" height="160"/><rect x="330" y="600" width="46" height="250"/><rect x="410" y="560" width="46" height="290"/></g>
+    <path d="M0,650 L160,600 L320,615 L480,540 L640,560 L800,480 L960,495 L1120,415 L1280,440 L1440,355 L1440,900 L0,900 Z" fill="url(#areaFill)"/>
+    <polyline points="0,650 160,600 320,615 480,540 640,560 800,480 960,495 1120,415 1280,440 1440,355" fill="none" stroke="#7fc4ff" stroke-opacity="0.55" stroke-width="3"/>
+    <g fill="#bfe0fb" fill-opacity="0.7"><circle cx="160" cy="600" r="5"/><circle cx="480" cy="540" r="5"/><circle cx="800" cy="480" r="5"/><circle cx="1120" cy="415" r="5"/><circle cx="1440" cy="355" r="5"/></g>
+    <g stroke="#7fc4ff" stroke-opacity="0.2" stroke-width="1.5"><line x1="1120" y1="140" x2="1240" y2="110"/><line x1="1240" y1="110" x2="1320" y2="200"/><line x1="1320" y1="200" x2="1200" y2="250"/><line x1="1200" y1="250" x2="1120" y2="140"/><line x1="1240" y1="110" x2="1200" y2="250"/></g>
+    <g fill="#7fc4ff" fill-opacity="0.35"><circle cx="1120" cy="140" r="8"/><circle cx="1240" cy="110" r="10"/><circle cx="1320" cy="200" r="7"/><circle cx="1200" cy="250" r="9"/></g>
+  </svg>
+  <div class="cover-inner">
+    <div class="cover-wordmark">medicamental</div>
+    <div class="cover-tag">Inteligência de Mercado · Análise de Dados</div>
+    <div class="cover-rule"></div>
+    <div class="cover-title">Estudo de Performance Regionais</div>
+    <div class="cover-sub">Análise de dados de vendas, metas e marcas por gerência</div>
+    <div class="cover-period">Mês base Junho/2026 · Performance YTD · Janeiro a Junho 2026</div>
+    <button class="cover-btn" id="coverBtn" style="margin-top:30px">Acessar o painel →</button>
+  </div>
+  <div class="cover-foot">Dados internos · Gerado a partir dos painéis Power BI</div>
+</div>
+
+<header class="top">
+  <div class="logo">medicamental</div>
+  <div class="sub">Estudo de Performance Regionais · Gerente <b id="mgrLabel">LUCILENE</b> ·Mês base Junho/2026 · Performance YTD (Jan–Jun 2026)</div>
+  <button class="home-btn" id="homeBtn">⌂ Início</button>
+</header>
+
+<div class="mgr-bar" id="mgrBar">
+  <span class="mgr-title">Gerente</span>
+  <button class="active" data-mgr="lucilene">LUCILENE</button>
+  <button data-mgr="rosa">ROSA</button>
+  <button data-mgr="mauro">MAURO</button>
+  <button data-mgr="alberto">ALBERTO</button>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="active" data-tab="visao">Visão Geral</button>
+  <button data-tab="sup">Supervisores</button>
+  <button data-tab="gerente">Scorecard Gerente</button>
+  <button data-tab="hpc">HPC / Consumo</button>
+  <button data-tab="campanhas">Campanhas</button>
+  <button data-tab="canais">WEB & B2List</button>
+  <button data-tab="marcas">Marcas</button>
+  <button data-tab="mensal">Evolução Mensal</button>
+</div>
+
+<main id="mainContent">
+  <section class="panel active" id="visao">
+    <h2 class="section">Visão Geral da Equipe</h2>
+    <p class="lead" id="visaoLead"></p>
+    <div class="kpi-grid" id="kpiVisao"></div>
+    <div class="grid2">
+      <div class="card"><h3>Atingimento de Cota</h3><div class="chart-wrap"><canvas id="g_ating"></canvas></div></div>
+      <div class="card"><h3>Realizado x Cota (Mil R$)</h3><div class="chart-wrap"><canvas id="g_realcota"></canvas></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Faturamento por Supervisor — Acumulado</h3><div class="chart-wrap"><canvas id="g_regfat"></canvas></div></div>
+      <div class="card"><h3>Composição do Faturamento Total</h3><div class="chart-wrap"><canvas id="g_comp"></canvas></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="sup">
+    <h2 class="section">Performance dos Supervisores</h2>
+    <p class="lead" id="supLead"></p>
+    <div id="supAviso"></div>
+    <div class="kpi-grid" id="kpiSup"></div>
+    <div class="grid2">
+      <div class="card"><h3>Total por Supervisor (R$)</h3><div class="chart-wrap tall"><canvas id="g_suptotal"></canvas></div></div>
+      <div class="card"><h3>% Projeção Cota por Supervisor</h3><div class="chart-wrap tall"><canvas id="g_supproj"></canvas></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Composição de Venda por Supervisor</h3><div class="chart-wrap tall"><canvas id="g_supcomp"></canvas></div></div>
+      <div class="card"><h3>Rentabilidade x Positivação x Inadimplência</h3><div class="chart-wrap tall"><canvas id="g_supind"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Tabela Completa — Supervisores</h3>
+      <div class="table-scroll"><table id="supTable">
+        <thead><tr><th>Supervisor</th><th>Vend.</th><th>Cota</th><th>Farma</th><th>Promoções</th><th>HPC</th><th>Eletrônico</th><th>Total Farma</th><th>%Proj Cota</th><th>OL</th><th>Total</th><th>%Rent</th><th>%Inad</th><th>%Posi</th><th>Prazo Méd</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="gerente">
+    <h2 class="section" id="gerTitle"></h2>
+    <p class="lead" id="gerLead"></p>
+    <div class="kpi-grid" id="kpiGer"></div>
+    <div class="grid2">
+      <div class="card"><h3>% Atingimento por Indicador</h3><div class="chart-wrap tall"><canvas id="g_gerpct"></canvas></div></div>
+      <div class="card"><h3>Placar (pontos × peso) por Indicador</h3><div class="chart-wrap tall"><canvas id="g_gerplacar"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Detalhamento do Scorecard</h3>
+      <div class="table-scroll"><table id="gerTable">
+        <thead><tr><th>Indicador</th><th>Meta</th><th>Atingido</th><th>%</th><th>Pontos</th><th>Peso</th><th>Placar</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="hpc">
+    <h2 class="section">HPC / Consumo</h2>
+    <p class="lead" id="hpcLead"></p>
+    <div class="kpi-grid" id="kpiHpc"></div>
+    <div class="grid1"><div class="card"><h3>Consumo por Equipe (R$)</h3><div class="chart-wrap"><canvas id="g_hpceq"></canvas></div></div></div>
+    <div class="grid2">
+      <div class="card"><h3>Top Marcas — Valor NF (R$)</h3><div class="chart-wrap tall"><canvas id="g_hpcmarca"></canvas></div></div>
+      <div class="card"><h3>Top Marcas — Positivação (POS)</h3><div class="chart-wrap tall"><canvas id="g_hpcpos"></canvas></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="campanhas">
+    <h2 class="section">Campanhas de Fornecedores</h2>
+    <p class="lead" id="campLead"></p>
+    <div class="kpi-grid" id="kpiCamp"></div>
+    <div class="grid2">
+      <div class="card"><h3>Meta x Venda por Campanha (R$)</h3><div class="chart-wrap tall"><canvas id="g_campmeta"></canvas></div></div>
+      <div class="card"><h3>% Atingimento por Campanha</h3><div class="chart-wrap tall"><canvas id="g_camppct"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Tabela de Campanhas</h3>
+      <div class="table-scroll"><table id="campTable">
+        <thead><tr><th>Campanha</th><th>Meta</th><th>Venda</th><th>% Atingido</th><th>Diferença</th></tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="canais">
+    <h2 class="section">Canais Digitais — WEB & B2List</h2>
+    <p class="lead" id="canaisLead"></p>
+    <div class="toggle-row" id="canalToggle">
+      <button class="active" data-canal="web">WEB</button>
+      <button data-canal="b2">B2List</button>
+    </div>
+    <div class="kpi-grid" id="kpiCanal"></div>
+    <div class="grid2">
+      <div class="card"><h3>VD NF por Supervisor (R$)</h3><div class="chart-wrap tall"><canvas id="g_canalvd"></canvas></div></div>
+      <div class="card"><h3>% Positivação por Supervisor</h3><div class="chart-wrap tall"><canvas id="g_canalpos"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Tabela — <span id="canalLabel">WEB</span></h3>
+      <div class="table-scroll"><table id="canalTable">
+        <thead><tr><th>Supervisor</th><th>VD NF</th><th>MG %</th><th>Cart.</th><th>POS</th><th>% POS</th><th>Tkt Médio</th><th>VMD</th></tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="marcas">
+    <h2 class="section">Análise por Marcas — Metas</h2>
+    <p class="lead" id="mkResumo"></p>
+    <div class="kpi-grid" id="mkKpis"></div>
+    <div class="grid2">
+      <div class="card"><h3>Top 15 Marcas por Meta — Meta x Realizado</h3><div class="chart-wrap" style="height:500px"><canvas id="g_mkTop"></canvas></div></div>
+      <div class="card"><h3>Distribuição por Faixa de Atingimento</h3><div class="chart-wrap" style="height:500px"><canvas id="g_mkFaixa"></canvas></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Maiores Oportunidades (falta p/ meta em R$)</h3><div class="chart-wrap tall"><canvas id="g_mkGap"></canvas></div></div>
+      <div class="card"><h3>Destaques — Maior % de Atingimento</h3><div class="chart-wrap tall"><canvas id="g_mkTopPct"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Tabela de Marcas</h3>
+      <div class="toggle-row" id="mkFilter">
+        <button class="active" data-f="meta">Com meta</button>
+        <button data-f="acima">Acima da meta</button>
+        <button data-f="abaixo">Abaixo da meta</button>
+        <button data-f="semmeta">Venda sem meta</button>
+        <input id="mkSearch" placeholder="Buscar marca..." style="margin-left:auto;padding:7px 14px;border:1px solid var(--cinza-borda);border-radius:20px;font-size:12.5px">
+      </div>
+      <div class="table-scroll" style="max-height:540px;overflow-y:auto"><table id="mkTable">
+        <thead><tr><th>Marca</th><th>Meta</th><th>Realizado (NF)</th><th>% Atingido</th><th>% Projeção</th><th>Projeção R$</th><th>Gap R$</th></tr></thead><tbody></tbody>
+      </table></div>
+      <p class="note">Gap = Realizado − Meta. Marcas com meta e sem faturamento no período aparecem com atingimento 0%.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="mensal">
+    <h2 class="section">Evolução Mensal 2026</h2>
+    <p class="lead">Comparativo dos indicadores mês a mês. Alterne entre a base <b>Com OL</b> e <b>Sem OL</b>.</p>
+    <div class="toggle-row" id="olToggle">
+      <button class="active" data-ol="com">Com OL</button>
+      <button data-ol="sem">Sem OL</button>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Vendas NF por Mês (R$)</h3><div class="chart-wrap"><canvas id="g_vdnf"></canvas></div></div>
+      <div class="card"><h3>Margem % por Mês</h3><div class="chart-wrap" id="mgWrap"><canvas id="g_mg"></canvas></div><p class="note" id="mgNote" style="display:none"></p></div>
+    </div>
+    <div class="grid1">
+      <div class="card"><h3>Positivação (POS) x % POS sobre Carteira</h3><div class="chart-wrap"><canvas id="g_pos"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Tabela Mensal — <span id="tblLabel">Com OL</span></h3>
+      <div class="table-scroll"><table id="mensalTable">
+        <thead><tr><th>Mês</th><th>VD NF</th><th>Cart.</th><th>POS</th><th>% POSxCart</th><th>SKU</th><th>QTD</th><th>% Var Mês</th><th>% Var Ano</th><th>VMD</th><th>MG %</th></tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+</main>
+
+<div id="mgrPlaceholder" style="display:none;max-width:1400px;margin:0 auto;padding:50px 22px">
+  <div class="placeholder-box"><h2>Gerente <span id="phName"></span></h2>
+    <p>Dashboard ainda sem dados. Envie os números desta regional e eu preencho as mesmas visões que estão em ROSA e LUCILENE.</p>
+  </div>
+</div>
+
+<footer>Estudo gerado a partir dos painéis Power BI · Medicamental · Ano 2026 (Jan–Jun) — dados internos</footer>
+
+<script>
+/* ===== helpers ===== */
+const meses=['Jan','Fev','Mar','Abr','Mai','Jun'];
+const AZUL='#155a94',AZUL2='#2f7fc4',VERDE='#3aa757',VERMELHO='#d1443c',AMARELO='#e0a63c',ROXO='#7b5cb8',CINZA='#9aa7b3';
+const PALETA=[AZUL,VERDE,AMARELO,VERMELHO,ROXO,AZUL2,CINZA,'#e8743c','#2e8a48','#5aa0d6'];
+const fmtBRL=v=>Math.round(v).toLocaleString('pt-BR');
+const fmtMi=v=>(v/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' Mi';
+const pct=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const cls=v=>v<0?'neg':(v>0?'pos':'');
+const compactBRL=v=>{const a=Math.abs(v);return a>=1e6?(v/1e6).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' Mi':(a>=1000?(v/1000).toFixed(0)+' mil':(''+Math.round(v)));};
+Chart.defaults.font.family="'Segoe UI',Arial,sans-serif";Chart.defaults.font.size=11.5;Chart.defaults.plugins.legend.labels.boxWidth=12;
+Chart.defaults.maintainAspectRatio=false;Chart.defaults.set('plugins.datalabels',{display:false});
+const DLF={weight:'700',size:9};
+const shareOf=(v,ctx)=>{const t=ctx.chart.data.datasets[ctx.datasetIndex].data.reduce((s,x)=>s+Math.abs(+x||0),0);return t?Math.abs(v)/t*100:0;};
+const dlMoney={display:true,color:'#1f2a37',font:DLF,anchor:'end',align:'end',clamp:true,formatter:(v,c)=>v?compactBRL(v)+' ('+shareOf(v,c).toFixed(1)+'%)':''};
+const dlMoneyPlain={display:true,color:'#1f2a37',font:DLF,anchor:'end',align:'end',clamp:true,formatter:v=>v?compactBRL(v):''};
+const dlPctVal={display:true,color:'#1f2a37',font:DLF,anchor:'end',align:'end',clamp:true,formatter:v=>(v||v===0)?pct(v):''};
+const dlNum={display:true,color:'#1f2a37',font:DLF,anchor:'end',align:'end',clamp:true,formatter:(v,c)=>v?v.toLocaleString('pt-BR')+' ('+shareOf(v,c).toFixed(1)+'%)':''};
+const dlStack={display:c=>shareOf(c.dataset.data[c.dataIndex],c)>=6,color:'#fff',font:{weight:'700',size:8},anchor:'center',align:'center',formatter:(v,c)=>compactBRL(v)+' · '+shareOf(v,c).toFixed(0)+'%'};
+const dlDonut={display:true,color:'#fff',font:{weight:'700',size:10},formatter:(v,c)=>[shareOf(v,c).toFixed(1)+'%',compactBRL(v)]};
+const dlMil={display:true,color:'#1f2a37',font:DLF,anchor:'end',align:'end',clamp:true,formatter:v=>v?v.toLocaleString('pt-BR',{maximumFractionDigits:0})+' Mil':''};
+
+/* ===== DADOS ===== */
+const DADOS={
+ rosa:{
+  nome:'ROSA', regiao:'Reg. II GO/DF',
+  vis:{foR:102.70,foV:8526.16,foC:8301.96,foFalta:224202,foVmd:406008,faR:96.08,faV:6861.15,faC:7141.20,faFalta:-280045,faVmd:326722,rent:18.61,pos:66.10,prazo:40.01,inad:1.15,du:21,dur:0},
+  sup:[
+   {n:'ARTHUR (GO I)',vend:11,cota:1756200,farma:912484.60,promo:381783.09,hpc:271167.42,eletr:102058.34,tf:1667493.45,proj:94.95,ol:165018.98,total:1832512.43,rent:18.83,inad:0.71,posi:81.91,prazo:39.84},
+   {n:'SUEIDE (GO II)',vend:14,cota:1485000,farma:817123.54,promo:184248.14,hpc:278931.02,eletr:214267.95,tf:1494570.65,proj:100.64,ol:600313.81,total:2094884.46,rent:18.71,inad:0.81,posi:55.68,prazo:39.53},
+   {n:'RAFAEL (GO III)',vend:14,cota:1310000,farma:708606.12,promo:220594.37,hpc:239135.40,eletr:83683.54,tf:1252019.43,proj:95.57,ol:417779.98,total:1669799.41,rent:20.12,inad:1.19,posi:62.18,prazo:43.10},
+   {n:'LUCIANO (DF)',vend:12,cota:1280000,farma:781182.55,promo:170866.10,hpc:182705.55,eletr:47894.08,tf:1182648.28,proj:92.39,ol:46890.40,total:1229538.68,rent:19.63,inad:0.88,posi:70.31,prazo:43.72},
+   {n:'FABIANE (MC)',vend:1,cota:1310000,farma:293148.72,promo:571841.27,hpc:74373.87,eletr:325059.32,tf:1264423.18,proj:96.52,ol:435001.49,total:1699424.67,rent:17.99,inad:1.82,posi:47.87,prazo:33.44}],
+  supTotPct:{rent:19.09,inad:1.15,posi:63.79,prazo:39.86,vend:52},supNota:'',
+  ger:{placar:786,nivel:2,perf:82.74,rows:[
+   {i:'01-Meta de Vendas',meta:7141200,at:6861154.99,pct:96.08,pt:96,pe:2,pl:192},
+   {i:'02-Positivação Painel',meta:2756,at:2024,pct:73.44,pt:73,pe:1.5,pl:109.5},
+   {i:'03-Prazo Médio Vendas',meta:45,at:40.01,pct:112.47,pt:100,pe:1,pl:100},
+   {i:'04-Rentabilidade',meta:21,at:18.61,pct:88.62,pt:89,pe:1.5,pl:133.5},
+   {i:'05-Inadimplência',meta:1.5,at:1.15,pct:130.35,pt:100,pe:0.5,pl:50},
+   {i:'06-Devoluções',meta:1.5,at:1.47,pct:102.04,pt:100,pe:0.5,pl:50},
+   {i:'07-Pedido Eletrônico/B2List',meta:1102,at:284,pct:25.77,pt:26,pe:1,pl:26},
+   {i:'08-Campanha de Vendas',meta:6,at:3,pct:50,pt:50,pe:0.5,pl:25},
+   {i:'09-Consumo Partic',meta:686115.50,at:1156781.71,pct:168.60,pt:100,pe:1,pl:100}],
+   tot:{meta:7831248.50,at:8020308.94,pct:847.37,pt:734,pe:9.5,pl:786}},
+  hpc:{tNF:8953722,tPos:2551,tMg:7.79,tPz:43.99,hNF:1174483,hPos:1907,hMg:14.09,hPz:42.43,sNF:13.12,sPos:74.75,
+   eq:[{s:'SUEIDE (GO II)',cart:1014,pos:428,pc:42.21,qtd:22722,nf:322943.38,mg:13.88},{s:'ARTHUR (GO I)',cart:576,pos:394,pc:68.40,qtd:22902,nf:294173.10,mg:13.61},{s:'RAFAEL (GO III)',cart:967,pos:505,pc:52.22,qtd:17576,nf:259507.29,mg:14.59},{s:'LUCIANO (DF)',cart:754,pos:429,pc:56.90,qtd:17425,nf:196057.53,mg:15.65},{s:'FABIANE (MC)',cart:440,pos:151,pc:34.32,qtd:7673,nf:101802.07,mg:12.15}],
+   mc:[{m:'G-TECH',qtd:10275,pos:971,nf:482570.18,mg:8.97},{m:'NUTRIN',qtd:2320,pos:282,nf:124863.18,mg:23.93},{m:'ARTE NATIVA',qtd:10801,pos:930,nf:91123.13,mg:15.54},{m:'KATIGUA',qtd:3967,pos:484,nf:80463.02,mg:18.65},{m:'BIO INSTINTO',qtd:8080,pos:380,nf:45735.04,mg:15.35},{m:'HERBAMED',qtd:2114,pos:351,nf:45623.80,mg:20.00},{m:'FORTLIFE',qtd:1491,pos:336,nf:43016.97,mg:27.47},{m:'FINI',qtd:3662,pos:128,nf:35042.76,mg:18.90},{m:'SANFARMA',qtd:6162,pos:274,nf:21613.79,mg:11.44},{m:'PRUDENCE',qtd:5103,pos:162,nf:19757.86,mg:7.36},{m:'DOMINA FARMA',qtd:449,pos:224,nf:18293.44,mg:30.76}]},
+  camp:[{n:'AIRELA GO-DF',meta:58351.73,venda:75001.31,pct:128.53,dif:16649.58},{n:'BRASTERÁPICA SP-GO',meta:30246.40,venda:42057.15,pct:139.05,dif:11810.75},{n:'GEOLAB GO-DF',meta:563665.62,venda:430187.54,pct:76.32,dif:-133478.08},{n:'NATIVITA GO-SP',meta:40007.40,venda:42389.94,pct:105.96,dif:2382.54},{n:'NATULAB SP-GO',meta:165399.40,venda:87992.46,pct:53.20,dif:-77406.94},{n:'PHARLAB GO-DF',meta:318842.16,venda:213300.40,pct:66.90,dif:-105541.76}],
+  web:[{s:'ARTHUR (GO I)',vd:83303.53,mg:21.70,cart:576,pos:42,pp:7.29,tkt:1983.42,vmd:3966.83},{s:'SUEIDE (GO II)',vd:190010.30,mg:19.87,cart:1014,pos:99,pp:9.76,tkt:1919.30,vmd:9048.11},{s:'RAFAEL (GO III)',vd:85067.77,mg:19.85,cart:967,pos:61,pp:6.31,tkt:1394.55,vmd:4050.85},{s:'LUCIANO (DF)',vd:47198.28,mg:19.36,cart:754,pos:53,pp:7.03,tkt:890.53,vmd:2484.12},{s:'FABIANE (MC)',vd:347570.73,mg:16.21,cart:440,pos:139,pp:31.59,tkt:2500.51,vmd:16550.99}],
+  webTot:{vd:753150.61,mg:18.33,cart:3751,pos:394,pp:10.50,tkt:1911.55,vmd:35864.31},
+  b2:[{s:'ARTHUR (GO I)',vd:14340.30,mg:13.42,cart:576,pos:23,pp:3.99,tkt:623.49,vmd:1195.03},{s:'SUEIDE (GO II)',vd:10846.92,mg:11.34,cart:1014,pos:19,pp:1.87,tkt:570.89,vmd:1807.82},{s:'RAFAEL (GO III)',vd:0,mg:0,cart:967,pos:0,pp:0,tkt:0,vmd:0},{s:'LUCIANO (DF)',vd:0,mg:0,cart:754,pos:0,pp:0,tkt:0,vmd:0},{s:'FABIANE (MC)',vd:540.73,mg:10.87,cart:440,pos:1,pp:0.23,tkt:540.73,vmd:540.73}],
+  b2Tot:{vd:25727.95,mg:12.49,cart:3751,pos:43,pp:1.15,tkt:598.32,vmd:1715.20},
+  cartTot:3751,
+  sem:{vdnf:[5433493.54,5539910.46,6524431.23,6492799.74,7512858.19,7264315.66],pos:[2022,2088,2182,2246,2291,2311],posCart:[53.91,55.67,58.17,59.88,61.08,61.61],sku:[2847,2780,2906,2876,2988,3118],qtd:[921103,1108168,1309254,1105712,1199204,1236124],varMes:[-1.55,1.96,17.77,-0.48,15.71,-3.31],varAno:[1.61,29.81,38.11,65.22,34.22,49.27],vmd:[258737.79,307772.80,296565.06,324639.99,375642.91,345919.79],mg:[12.70,9.03,8.81,13.52,11.22,9.39],total:{vdnf:38767808.82,pos:3049,posCart:81.28,sku:3950,qtd:6879565,varMes:4.71,varAno:34.92,vmd:317768.92,mg:10.76}},
+  com:{vdnf:[6056362.40,6523305.02,7416485.20,7697371.22,9471078.01,8953722.35],pos:[2299,2280,2444,2426,2524,2551],posCart:[61.29,60.78,65.16,64.68,67.29,68.01],sku:[2930,2858,2972,2955,3046,3164],qtd:[983898,1249696,1402114,1262806,1383262,1392870],varMes:[-8.28,7.71,13.69,3.79,23.04,-5.46],varAno:[-0.55,30.53,27.39,30.49,31.49,46.52],vmd:[288398.21,362405.83,337112.96,384868.56,473553.90,426367.73],mg:[11.67,6.89,4.65,11.30,10.34,7.79],total:{vdnf:46118324.20,pos:3225,posCart:85.98,sku:3975,qtd:7674646,varMes:5.37,varAno:27.67,vmd:378019.05,mg:8.78}},
+  mkMetas:[
+   {n:'EURO (G)',meta:2347883.50,nf:2169954.85,pct:92.42},{n:'NEOQ (G)',meta:1141690.16,nf:1390744.07,pct:121.81},{n:'NEOQ (S)',meta:1046538.57,nf:1276309.21,pct:121.96},{n:'LEGRAND (S)',meta:322184.32,nf:197216.24,pct:61.21},{n:'MULTILAB (S)',meta:258817.36,nf:214000.49,pct:82.68},{n:'ZYDUS (G)',meta:247032.90,nf:301172.36,pct:121.92},{n:'PHARLAB (G)',meta:237929.35,nf:181439.42,pct:76.26},{n:'GEOLAB (S)',meta:191724.33,nf:287371.70,pct:149.89},{n:'SANDOZ (G)',meta:186850.34,nf:206485.82,pct:110.51},{n:'BIOLAB (G)',meta:169226.15,nf:85326.10,pct:50.42},{n:'NATULAB',meta:157032.15,nf:89475.57,pct:56.98},{n:'NUTRIN (S)',meta:152057.15,nf:124863.18,pct:82.12},{n:'DELTA (S)',meta:131021.68,nf:73193.88,pct:55.86},{n:'GEOLAB (G)',meta:117012.97,nf:152585.40,pct:130.40},{n:'FINI',meta:109633.73,nf:35042.76,pct:31.96,p:35.33,pr:38731.47},{n:'GERMED (G)',meta:98989.51,nf:31708.17,pct:32.03,p:48.05,pr:47562.26},{n:'CAZI (S)',meta:92974.90,nf:78223.01,pct:84.13},{n:'ARTE NATIVA (S)',meta:80961.34,nf:91123.13,pct:112.55},{n:'FARMAX (S)',meta:80041.65,nf:11302.17,pct:14.12},{n:'BELFAR (S)',meta:78811.30,nf:43499.42,pct:55.19},{n:'KATIGUA',meta:77891.62,nf:80463.02,pct:103.30},{n:'VITAMEDIC (G)',meta:76916.88,nf:73459.71,pct:95.51},{n:'BIOLAB (S)',meta:75647.67,nf:36501.20,pct:48.25},{n:'PHARMASCIENCE (G)',meta:63244.94,nf:66142.85,pct:104.58},{n:'G-TECH',meta:59489.67,nf:482570.18,pct:811.18},{n:'UNIAOQ (S)',meta:57930.63,nf:28775.54,pct:49.67},{n:'PHARMASCIENCE (S)',meta:55939.97,nf:50658.13,pct:90.56,p:95.09,pr:53191.04},{n:'GLOBO (G)',meta:53959.67,nf:32228.12,pct:59.73},{n:'VITAMEDIC (S)',meta:52301.66,nf:72475.79,pct:138.57},{n:'UNICHEM',meta:45041.01,nf:40271.67,pct:89.41},{n:'AIRELA (S)',meta:44247.66,nf:75335.88,pct:170.26},{n:'BIOSINTETICA (G)',meta:42582.08,nf:null,pct:0,p:0,pr:0},{n:'IMEC (S)',meta:36528.04,nf:48617.15,pct:133.10},{n:'PHARLAB (S)',meta:34270.75,nf:32820.18,pct:95.77},{n:'GREENPHARMA (G)',meta:32334.59,nf:22796.19,pct:70.50},{n:'BIO INSTINTO',meta:32177.06,nf:45735.04,pct:142.14},{n:'UNIAOQ (G)',meta:29219.06,nf:20347.87,pct:69.64},{n:'EMS (S)',meta:24977.07,nf:8547.02,pct:34.22,p:39.92,pr:9971.52},{n:'NEOQ (VIT)',meta:24871.57,nf:38761.23,pct:155.85},{n:'NUTRIEX',meta:24736.68,nf:17900.17,pct:72.36},{n:'LEBON',meta:23461.78,nf:21445.85,pct:91.41},{n:'NATIVITA (S)',meta:22799.83,nf:27522.10,pct:120.71},{n:'FORTLIFE (CONSUMO)',meta:21867.55,nf:43971.34,pct:201.08},{n:'SANFARMA (S)',meta:20735.55,nf:21613.79,pct:104.24},{n:'BRASTERAPICA (S)',meta:20653.19,nf:42405.94,pct:205.32},{n:'DOMINA FARMA (S)',meta:20137.94,nf:18293.44,pct:90.84,p:95.38,pr:19208.11},{n:'PRUDENCE',meta:19709.38,nf:19757.86,pct:100.25},{n:'HEARST (S)',meta:18541.34,nf:null,pct:0,p:0,pr:0},{n:'SANDOZ (S)',meta:18288.27,nf:13439.79,pct:73.49},{n:'CIFARMA (S)',meta:17997.87,nf:7319.07,pct:40.67,p:42.70,pr:7685.02},{n:'VIDORA',meta:16175.86,nf:11521.29,pct:71.23},{n:'CONFIRME',meta:16174.43,nf:16545.65,pct:102.30},{n:'COTY',meta:15872.89,nf:12878.04,pct:81.13,p:89.67,pr:14233.62},{n:'MEDQ (S)',meta:15111.70,nf:1610.28,pct:10.66,p:15.98,pr:2415.42},{n:'ABOVE',meta:14651.12,nf:7685.92,pct:52.46,p:61.20,pr:8966.91},{n:'PIRACANJUBA',meta:14261.92,nf:1408.88,pct:9.88,p:23.05,pr:3287.39},{n:'GLOBO (S)',meta:14091.48,nf:12377.29,pct:87.84},{n:'BELLAPHYTUS',meta:12206.95,nf:13011.99,pct:106.59},{n:'DANA',meta:11858.73,nf:17067.09,pct:143.92,p:151.12,pr:17920.44},{n:'NATIVITA (G)',meta:10858.56,nf:15552.86,pct:143.23},{n:'HERBAMED (S)',meta:10833.41,nf:45623.80,pct:421.14},{n:'DELTA (G)',meta:10718.54,nf:7572.22,pct:70.65},{n:'BIOCHIMICO',meta:10603.40,nf:18482.52,pct:174.31},{n:'GREENPHARMA (S)',meta:9853.84,nf:9787.94,pct:99.33},{n:'MAKROFARMA (S)',meta:9725.96,nf:5988.60,pct:61.57,p:129.30,pr:12576.06},{n:'ZIINZIIN (S)',meta:9712.88,nf:12022.06,pct:123.77},{n:'BLAU',meta:9582.71,nf:-3580.16,pct:-37.36,p:-261.52,pr:-25061.12},{n:'GRANADO',meta:8421.94,nf:18085.74,pct:214.75},{n:'CIFARMA (G)',meta:8356.33,nf:79.59,pct:0.95,p:5.00,pr:417.85},{n:'GLAXO',meta:6545.15,nf:37480.20,pct:572.64},{n:'NUTIVIT',meta:6146.43,nf:2499.15,pct:40.66,p:50.23,pr:3087.19},{n:'WALDEMIRO PEREIRA (S)',meta:5985.32,nf:6901.44,pct:115.31,p:151.34,pr:9058.14},{n:'CRISTALIA',meta:5532.12,nf:6672.43,pct:120.61},{n:'BELFAR (G)',meta:5356.83,nf:1744.49,pct:32.57,p:40.23,pr:2154.96},{n:'MALAVASI',meta:5151.39,nf:10.08,pct:0.20,p:4.11,pr:211.68},{n:'SUNLESS',meta:4787.65,nf:2102.49,pct:43.91,p:76.85,pr:3679.36},{n:'EMS (G)',meta:3522.95,nf:null,pct:0,p:0,pr:0},{n:'BIOSINTETICA (S)',meta:3086.01,nf:null,pct:0,p:0,pr:0},{n:'MEDLEVENSOHN (S)',meta:1774.29,nf:10246.32,pct:577.49,p:606.36,pr:10758.64},{n:'SINTER',meta:1284.27,nf:1059.18,pct:82.47,p:144.33,pr:1853.57},{n:'LANSINOH',meta:387.76,nf:1867.47,pct:481.60,p:1685.62,pr:6536.15}],
+  mkSem:[{n:'MEDLEY (G)',nf:62516.72,pr:62516.72},{n:'CIMED (S)',nf:19944.91,pr:null},{n:'MERCK (G)',nf:18226.09,pr:18226.09},{n:'SANOFI (S)',nf:13244.35,pr:14638.49},{n:'HADASSAH',nf:4348.43,pr:11414.63},{n:'DENTALCLEAN',nf:3013.18,pr:4218.45},{n:'MEDQ (G)',nf:2289.04,pr:4005.82},{n:'ABELHA RAINHA',nf:2046.60,pr:2528.15},{n:'PARAIBUNA',nf:1027.23,pr:1961.08},{n:'BIGFRAL',nf:954.38,pr:6680.66},{n:'UNIPHAR',nf:416.00,pr:728.00},{n:'ALMEIDA PRADO (S)',nf:363.87,pr:1528.25},{n:'MEDLEY (S)',nf:52.65,pr:368.55},{n:'MERCK (S)',nf:31.48,pr:661.08},{n:'NOVA QUIMICA (G)',nf:27.24,pr:572.04},{n:'CIFARMA REC (S)',nf:-297.74,pr:-6252.54}]
+ },
+ lucilene:{
+  nome:'LUCILENE', regiao:'Reg. I SPI/SPC',
+  vis:{foR:88.11,foV:20013.36,foC:22714.87,foFalta:-2701511,foVmd:953017,faR:81.49,faV:11978.50,faC:14700.00,faFalta:-2721501,faVmd:570405,rent:19.18,pos:63.75,prazo:45.62,inad:0.40,du:21,dur:0},
+  sup:[
+   {n:'MAXWEL (SPC I)',vend:15,cota:2420000,farma:793023.85,promo:898108.13,hpc:224962.29,eletr:216941.01,tf:2133035.28,proj:88.14,ol:1050030.51,total:3183065.79,rent:19.11,inad:0.67,posi:59.54,prazo:47.02},
+   {n:'BRUNO (SPC V)',vend:15,cota:2250000,farma:612561.47,promo:792019.72,hpc:234226.07,eletr:219779.16,tf:1858586.42,proj:82.60,ol:685019.68,total:2543606.10,rent:19.80,inad:0.16,posi:63.20,prazo:47.72},
+   {n:'VILMA (SPC III)',vend:12,cota:1370000,farma:318719.59,promo:516541.21,hpc:83986.70,eletr:105647.40,tf:1024894.90,proj:74.81,ol:543739.03,total:1568633.93,rent:19.93,inad:2.47,posi:50.95,prazo:43.39},
+   {n:'S FREITAS (SPI IV)',vend:14,cota:1960000,farma:506810.07,promo:830161.10,hpc:268083.90,eletr:195518.21,tf:1800575.28,proj:91.87,ol:655624.66,total:2456199.94,rent:21.30,inad:0.55,posi:66.34,prazo:44.73},
+   {n:'CECILIO MIGUEL (SPI II)',vend:16,cota:2050000,farma:644977.27,promo:1269089.14,hpc:310937.26,eletr:169937.37,tf:2394941.04,proj:116.83,ol:1281982.50,total:3676923.54,rent:19.73,inad:0.21,posi:69.07,prazo:40.61},
+   {n:'JOAO PIRES',vend:13,cota:1800000,farma:400870.41,promo:999595.56,hpc:232942.98,eletr:138306.72,tf:1771715.67,proj:98.43,ol:1462540.34,total:3234256.01,rent:19.06,inad:0.18,posi:69.15,prazo:43.71},
+   {n:'MOIRA BORIN (MC SP)',vend:0,cota:700000,farma:273202.00,promo:138297.25,hpc:116119.52,eletr:1889.81,tf:529508.58,proj:75.64,ol:816166.52,total:1345675.10,rent:12.90,inad:0.00,posi:39.53,prazo:58.65},
+   {n:'FABIO TOTA (MC SPC/LESTE)',vend:0,cota:600000,farma:182386.28,promo:23927.27,hpc:31021.36,eletr:1878.66,tf:239213.57,proj:39.87,ol:418628.12,total:657841.69,rent:15.05,inad:0.00,posi:69.69,prazo:48.21},
+   {n:'VAGO (1.10)',vend:1,cota:800000,farma:43015.13,promo:-7130.42,hpc:11056.01,eletr:8480.28,tf:55421.00,proj:6.93,ol:133590.79,total:189011.79,rent:14.74,inad:0.00,posi:0,prazo:47.02},
+   {n:'MARCIO (MC SPI I)',vend:1,cota:750000,farma:20128.17,promo:131451.62,hpc:2658.27,eletr:16369.35,tf:170607.41,proj:22.75,ol:987539.51,total:1158146.92,rent:8.82,inad:0.00,posi:42.51,prazo:65.81}],
+  supTotPct:{rent:19.18,inad:0.40,posi:63.75,prazo:45.62},supNota:'',
+  ger:{placar:738,nivel:2,perf:77.68,rows:[
+   {i:'01-Meta de Vendas',meta:14700000,at:11978499.15,pct:81.49,pt:81,pe:2,pl:162},
+   {i:'02-Positivação Painel',meta:6433,at:4557,pct:70.84,pt:71,pe:1.5,pl:106.5},
+   {i:'03-Prazo Médio Vendas',meta:45,at:45.62,pct:98.64,pt:99,pe:1,pl:99},
+   {i:'04-Rentabilidade',meta:21,at:19.18,pct:91.33,pt:91,pe:1.5,pl:136.5},
+   {i:'05-Inadimplência',meta:1.5,at:0.40,pct:372.66,pt:100,pe:0.5,pl:50},
+   {i:'06-Devoluções',meta:1.5,at:3.95,pct:37.97,pt:38,pe:0.5,pl:19},
+   {i:'07-Pedido Eletrônico/B2List',meta:2573,at:1029,pct:39.99,pt:40,pe:1,pl:40},
+   {i:'08-Campanha de Vendas',meta:6,at:3,pct:50,pt:50,pe:0.5,pl:25},
+   {i:'09-Consumo Partic',meta:1197849.92,at:1749963.34,pct:146.09,pt:100,pe:1,pl:100}],
+   tot:{meta:15906930.92,at:13734120.64,pct:989.01,pt:670,pe:9.5,pl:738}},
+  hpc:{tNF:20304311,tPos:6013,tMg:-2.95,tPz:47.05,hNF:2194375,hPos:3642,hMg:16.23,hPz:46.03,sNF:10.81,sPos:60.57,
+   eq:[{s:'CECILIO MIGUEL (SPI II)',cart:1560,pos:793,pc:50.83,qtd:31787,nf:484164.37,mg:16.31},{s:'JOAO PIRES',cart:1230,pos:569,pc:46.26,qtd:24219,nf:377567.58,mg:16.77},{s:'S FREITAS (SPI IV)',cart:1325,pos:611,pc:46.11,qtd:23890,nf:362347.79,mg:18.41},{s:'BRUNO (SPC V)',cart:1354,pos:544,pc:40.18,qtd:23738,nf:283948.80,mg:17.33},{s:'MAXWEL (SPC I)',cart:1248,pos:566,pc:45.35,qtd:23147,nf:277293.98,mg:14.76},{s:'VILMA (SPC III)',cart:938,pos:347,pc:36.99,qtd:11405,nf:135677.98,mg:17.42},{s:'MOIRA BORIN (MC SP)',cart:302,pos:82,pc:27.15,qtd:12768,nf:131102.78,mg:10.35},{s:'MARCIO (MC SPI I)',cart:287,pos:35,pc:12.20,qtd:2974,nf:85926.22,mg:13.07},{s:'FABIO TOTA (MC)',cart:320,pos:68,pc:21.25,qtd:2998,nf:35167.83,mg:14.02},{s:'VAGO',cart:173,pos:27,pc:15.61,qtd:1249,nf:21177.34,mg:17.46}],
+   mc:[{m:'G-TECH',qtd:5891,pos:899,nf:325615.94,mg:7.98},{m:'HERBAMED (S)',qtd:10827,pos:594,nf:268304.72,mg:25.80},{m:'FINI',qtd:14042,pos:673,nf:259498.38,mg:27.32},{m:'ARTE NATIVA (S)',qtd:18012,pos:1440,nf:152777.89,mg:17.37},{m:'KATIGUA',qtd:6171,pos:751,nf:147705.54,mg:18.36},{m:'BIO INSTINTO',qtd:22818,pos:994,nf:138606.59,mg:13.85},{m:'LANSINOH',qtd:2518,pos:39,nf:123427.67,mg:13.44},{m:'NUTRIN (S)',qtd:2463,pos:319,nf:121817.30,mg:17.25},{m:'MAXINUTRI',qtd:6189,pos:547,nf:98033.40,mg:17.09},{m:'EURO (CONSUMO)',qtd:2462,pos:260,nf:77119.36,mg:-6.16},{m:'NUTRIEX',qtd:9198,pos:478,nf:54891.27,mg:9.19}]},
+  camp:[{n:'AIRELA SP',meta:75405.70,venda:103681.87,pct:137.50,dif:28276.17},{n:'BIOSINTÉTICA SP',meta:481950.26,venda:460867.45,pct:95.63,dif:-21082.81},{n:'BRASTERÁPICA SP-GO',meta:47161.28,venda:32161.80,pct:68.20,dif:-14999.48},{n:'LEGRAND GENÉRICO SP',meta:264335.37,venda:289065.55,pct:109.36,dif:24730.18},{n:'NATIVITA GO-SP',meta:33051.21,venda:42276.27,pct:127.91,dif:9225.06},{n:'NATULAB SP-GO',meta:269007.59,venda:110038.48,pct:40.91,dif:-158969.11}],
+  web:[{s:'MAXWEL (SPC I)',vd:206417.20,mg:17.51,cart:1248,pos:200,pp:16.03,tkt:1032.09,vmd:9829.39},{s:'VAGO',vd:8093.95,mg:17.86,cart:173,pos:11,pp:6.36,tkt:735.81,vmd:1156.28},{s:'MARCIO (MC SPI I)',vd:16420.64,mg:2.04,cart:287,pos:13,pp:4.53,tkt:1263.13,vmd:4105.16},{s:'BRUNO (SPC V)',vd:216970.51,mg:17.53,cart:1354,pos:206,pp:15.21,tkt:1053.25,vmd:10331.93},{s:'VILMA (SPC III)',vd:102674.07,mg:18.50,cart:938,pos:131,pp:13.97,tkt:783.77,vmd:4889.24},{s:'S FREITAS (SPI IV)',vd:191381.94,mg:17.23,cart:1325,pos:183,pp:13.81,tkt:1045.80,vmd:9113.43},{s:'CECILIO MIGUEL (SPI II)',vd:167660.92,mg:17.54,cart:1560,pos:187,pp:11.99,tkt:896.58,vmd:7983.85},{s:'JOAO PIRES',vd:136613.74,mg:17.60,cart:1230,pos:152,pp:12.36,tkt:898.77,vmd:6505.42},{s:'MOIRA BORIN (MC SP)',vd:1915.33,mg:21.99,cart:302,pos:5,pp:1.66,tkt:383.07,vmd:957.67},{s:'FABIO TOTA (MC)',vd:1897.80,mg:22.01,cart:320,pos:2,pp:0.63,tkt:948.90,vmd:474.45}],
+  webTot:{vd:1050046.10,mg:17.36,cart:8737,pos:1090,pp:12.48,tkt:963.35,vmd:50002.20},
+  b2:[{s:'MAXWEL (SPC I)',vd:10459.47,mg:15.18,cart:1248,pos:19,pp:1.52,tkt:550.50,vmd:1307.43},{s:'VAGO',vd:0,mg:0,cart:173,pos:0,pp:0,tkt:0,vmd:0},{s:'MARCIO (MC SPI I)',vd:0,mg:0,cart:287,pos:0,pp:0,tkt:0,vmd:0},{s:'BRUNO (SPC V)',vd:796.59,mg:-6.73,cart:1354,pos:3,pp:0.22,tkt:265.53,vmd:265.53},{s:'VILMA (SPC III)',vd:618.10,mg:11.19,cart:938,pos:2,pp:0.21,tkt:309.05,vmd:309.05},{s:'S FREITAS (SPI IV)',vd:202.64,mg:-9.12,cart:1325,pos:1,pp:0.08,tkt:202.64,vmd:202.64},{s:'CECILIO MIGUEL (SPI II)',vd:810.10,mg:5.38,cart:1560,pos:11,pp:0.71,tkt:73.65,vmd:135.02},{s:'JOAO PIRES',vd:2373.49,mg:9.93,cart:1230,pos:1,pp:0.08,tkt:2373.49,vmd:2373.49},{s:'MOIRA BORIN (MC SP)',vd:0,mg:0,cart:302,pos:0,pp:0,tkt:0,vmd:0},{s:'FABIO TOTA (MC)',vd:0,mg:0,cart:320,pos:0,pp:0,tkt:0,vmd:0}],
+  b2Tot:{vd:15260.39,mg:12.14,cart:8737,pos:37,pp:0.42,tkt:412.44,vmd:1271.70},
+  cartTot:8737,
+  sem:{vdnf:[13149987.76,9902922.52,11838442.09,12083713.70,12537633.95,12068951.43],pos:[5413,4834,5117,5130,5066,4948],posCart:[61.95,55.33,58.57,58.72,57.98,56.63],sku:[3566,3423,3621,3798,3757,3737],qtd:[2922555,2127929,2405840,2355918,2467748,2404901],varMes:[49.82,-24.69,19.54,2.07,3.76,-3.74],varAno:[10.32,-0.96,-3.61,21.54,-1.12,0.11],vmd:[626189.89,550162.36,538111.00,604185.69,626881.70,574711.97],mg:[4.21,1.44,4.22,5.83,4.68,2.82],total:{vdnf:71581651.45,pos:7037,posCart:80.54,sku:4790,qtd:14684891,varMes:4.82,varAno:3.92,vmd:586734.85,mg:3.95}},
+  com:{vdnf:[22161663.34,15672891.95,21006730.16,17853334.91,21383992.64,20304310.65],pos:[6389,5924,6220,6148,6129,6013],posCart:[73.13,67.80,71.19,70.37,70.15,68.82],sku:[3730,3583,3802,3918,3911,3929],qtd:[4543085,3218494,4111334,3333257,3856928,3750785],varMes:[30.35,-29.28,34.03,-15.01,19.78,-5.05],varAno:[7.18,-18.60,-11.29,-10.76,-13.52,-9.77],vmd:[1055317.30,870716.22,954851.37,892666.75,1069199.63,966871.94],mg:[1.06,-2.68,-2.53,2.29,-1.33,-2.95],total:{vdnf:118382923.65,pos:7577,posCart:86.72,sku:4858,qtd:22813883,varMes:2.87,varAno:-9.53,vmd:970351.83,mg:-1.01}},
+  mkMetas:[
+   {n:'NEOQ (G)',meta:5718065.48,nf:4933165.06,pct:86.27},{n:'NEOQ (S)',meta:4615467.36,nf:4378116.48,pct:94.86},{n:'EURO (G)',meta:3677256.05,nf:3261072.39,pct:88.68},{n:'SANDOZ (G)',meta:1549802.78,nf:1194459.24,pct:77.07},{n:'LEGRAND (S)',meta:598293.28,nf:286147.30,pct:47.83},{n:'NATULAB',meta:494656.26,nf:169337.01,pct:34.23},{n:'PHARLAB (G)',meta:468755.79,nf:323452.91,pct:69.00},{n:'GEOLAB (G)',meta:431196.34,nf:209871.43,pct:48.67,p:51.11,pr:220365.00},{n:'NEOQ (VIT)',meta:404558.20,nf:242581.15,pct:59.96},{n:'MULTILAB (S)',meta:403408.30,nf:230099.64,pct:57.04},{n:'BIOSINTETICA (G)',meta:392985.35,nf:555505.15,pct:141.36},{n:'HERBAMED (S)',meta:321634.72,nf:268304.72,pct:83.42},{n:'FINI',meta:303434.73,nf:259498.38,pct:85.52,p:94.52,pr:286814.00},{n:'LEGRAND (G)',meta:295109.14,nf:290707.98,pct:98.51},{n:'GEOLAB (S)',meta:292277.38,nf:170168.78,pct:58.22},{n:'NUTRIN (S)',meta:277569.58,nf:121817.30,pct:43.89,p:46.08,pr:127908.17},{n:'DELTA (S)',meta:270561.71,nf:178301.72,pct:65.90},{n:'BIOLAB (G)',meta:252143.84,nf:75239.35,pct:29.84,p:36.86,pr:92942.73},{n:'BIOLAB (S)',meta:232542.98,nf:62288.91,pct:26.79,p:29.61,pr:68845.64},{n:'KATIGUA',meta:211494.44,nf:147705.54,pct:69.84},{n:'ZYDUS (G)',meta:197919.73,nf:160972.85,pct:81.33},{n:'G-TECH',meta:185153.63,nf:325615.94,pct:175.86},{n:'MAXINUTRI',meta:154201.19,nf:98033.40,pct:63.57},{n:'ARTE NATIVA (S)',meta:147140.31,nf:152777.89,pct:103.83},{n:'VITAMEDIC (G)',meta:128268.12,nf:64081.09,pct:49.96},{n:'PRUDENCE',meta:127893.55,nf:52207.03,pct:40.82},{n:'EMS (S)',meta:125566.32,nf:152094.24,pct:121.13},{n:'CAZI (S)',meta:124322.59,nf:50247.68,pct:40.42,p:44.67,pr:55536.91},{n:'NUTRIEX',meta:117778.15,nf:54891.27,pct:46.61},{n:'ABOVE',meta:114748.67,nf:23375.98,pct:20.37,p:23.77,pr:27271.98},{n:'AIRELA (S)',meta:114619.68,nf:104156.90,pct:90.87},{n:'PHARMASCIENCE (G)',meta:113934.00,nf:77381.40,pct:67.92,p:71.31,pr:81250.47},{n:'UNIAOQ (S)',meta:101144.26,nf:54181.32,pct:53.57},{n:'BELFAR (S)',meta:91207.68,nf:53097.32,pct:58.22},{n:'COTY',meta:87789.57,nf:24699.39,pct:28.13},{n:'MEDQ (S)',meta:87647.47,nf:10069.36,pct:11.49},{n:'DANA',meta:85818.10,nf:37509.47,pct:43.71,p:45.89,pr:39384.94},{n:'VITAMEDIC (S)',meta:84774.39,nf:28197.45,pct:33.26},{n:'LEBON',meta:73549.63,nf:51086.23,pct:69.46},{n:'BIO INSTINTO',meta:72552.63,nf:138606.59,pct:191.04},{n:'ZIINZIIN (S)',meta:69251.79,nf:23496.68,pct:33.93,p:39.58,pr:27412.79},{n:'UNICHEM',meta:65476.83,nf:47121.60,pct:71.97,p:75.57,pr:49477.68},{n:'FARMAX (S)',meta:64369.85,nf:9248.57,pct:14.37,p:15.09,pr:9711.00},{n:'BRASTERAPICA (S)',meta:62859.74,nf:43203.50,pct:68.73},{n:'CIFARMA (S)',meta:62399.78,nf:19715.65,pct:31.60},{n:'PHARMASCIENCE (S)',meta:60598.61,nf:50402.96,pct:83.18,p:87.33,pr:52923.11},{n:'GERMED (G)',meta:48407.80,nf:20581.16,pct:42.52,p:99.20,pr:48022.71},{n:'GLOBO (G)',meta:47285.78,nf:30548.92,pct:64.60},{n:'EURO (CONSUMO)',meta:46825.29,nf:77119.36,pct:164.70,p:192.15,pr:89972.59},{n:'SANFARMA (S)',meta:46669.00,nf:31101.66,pct:66.64},{n:'SANDOZ (S)',meta:45998.61,nf:25083.92,pct:54.53,p:60.27,pr:27724.33},{n:'FORTLIFE (CONSUMO)',meta:41354.70,nf:35563.38,pct:86.00},{n:'BIOCHIMICO',meta:40371.68,nf:12898.78,pct:31.95,p:33.55,pr:13543.72},{n:'PHARLAB (S)',meta:37546.03,nf:39507.92,pct:105.23},{n:'MEDLEVENSOHN (S)',meta:35876.47,nf:45779.51,pct:127.60},{n:'GRANADO',meta:35718.51,nf:20723.36,pct:58.02,p:60.92,pr:21759.53},{n:'BELLAPHYTUS',meta:32924.67,nf:27944.00,pct:84.87},{n:'GREENPHARMA (G)',meta:32306.04,nf:18890.06,pct:58.47,p:61.40,pr:19834.56},{n:'MEDQ (G)',meta:31932.25,nf:3341.15,pct:10.46,p:11.56,pr:3692.85},{n:'UNIAOQ (G)',meta:31203.11,nf:35651.57,pct:114.26},{n:'DOMINA FARMA (S)',meta:31078.18,nf:15557.45,pct:50.06},{n:'WALDEMIRO PEREIRA (S)',meta:30674.24,nf:38804.31,pct:126.50},{n:'CIFARMA (G)',meta:30168.35,nf:3909.38,pct:12.96,p:19.44,pr:5864.07},{n:'BLAU',meta:27642.92,nf:2855.26,pct:10.33,p:43.38,pr:11992.09},{n:'LANSINOH',meta:27463.47,nf:123427.67,pct:449.42,p:555.17,pr:152469.47},{n:'IMEC (S)',meta:22783.37,nf:18377.10,pct:80.66},{n:'BELFAR (G)',meta:20666.05,nf:3755.67,pct:18.17,p:29.36,pr:6066.85},{n:'NATIVITA (S)',meta:19135.47,nf:23939.85,pct:125.11},{n:'NUTIVIT',meta:18401.83,nf:4075.98,pct:22.15,p:24.48,pr:4505.03},{n:'VIDORA',meta:18072.78,nf:6493.01,pct:35.93,p:37.72,pr:6817.66},{n:'CRISTALIA',meta:16264.70,nf:24087.97,pct:148.10},{n:'GREENPHARMA (S)',meta:14826.75,nf:13548.25,pct:91.38,p:106.61,pr:15806.29},{n:'HEARST (S)',meta:14815.13,nf:null,pct:0,p:0,pr:0},{n:'MAKROFARMA (S)',meta:12494.23,nf:8249.73,pct:66.03,p:72.98,pr:9118.12},{n:'SUNLESS',meta:10771.40,nf:1724.13,pct:16.01,p:25.86,pr:2785.13},{n:'DELTA (G)',meta:10731.89,nf:6612.15,pct:61.61},{n:'BIOSINTETICA (S)',meta:10688.23,nf:74916.81,pct:700.93},{n:'CONFIRME',meta:10619.10,nf:9954.74,pct:93.74,p:98.43,pr:10452.48},{n:'NATIVITA (G)',meta:8719.30,nf:18892.66,pct:216.68},{n:'GLOBO (S)',meta:8239.62,nf:8953.28,pct:108.66},{n:'MALAVASI',meta:6075.86,nf:3752.31,pct:61.76,p:99.76,pr:6061.42},{n:'EURO (OTC)',meta:5757.54,nf:1477.90,pct:25.67,p:44.92,pr:2586.33},{n:'PIRACANJUBA',meta:4037.96,nf:2450.19,pct:60.68,p:98.02,pr:3958.00},{n:'GLAXO',meta:3263.50,nf:29323.99,pct:898.54},{n:'SINTER',meta:2827.06,nf:2835.56,pct:100.30,p:117.02,pr:3308.15},{n:'TEUTO (G)',meta:1751.47,nf:950.27,pct:54.26,p:113.94,pr:1995.57},{n:'EMS (G)',meta:1193.14,nf:null,pct:0,p:0,pr:0},{n:'TEUTO (S)',meta:13.77,nf:19.65,pct:142.70,p:2996.73,pr:412.65}],
+  mkSem:[{n:'MEDLEY (G)',nf:93614.68,pr:103468.86},{n:'HADASSAH',nf:26538.35,pr:69663.17},{n:'DANONE',nf:9676.40,pr:33867.40},{n:'CIMED (S)',nf:8064.43,pr:8913.32},{n:'SANOFI (S)',nf:6922.76,pr:9691.86},{n:'NUTRATA',nf:5399.28,pr:6669.70},{n:'UNIPHAR',nf:2824.42,pr:2965.64},{n:'ABELHA RAINHA',nf:2614.04,pr:3921.06},{n:'PARAIBUNA',nf:2561.74,pr:3586.44},{n:'DENTALCLEAN',nf:2402.87,pr:2803.35},{n:'FLOPI',nf:1934.72,pr:3385.76},{n:'ALMEIDA PRADO (S)',nf:1394.37,pr:2252.44},{n:'MERCK (G)',nf:1127.07,pr:2151.68},{n:'BANANA BRASIL',nf:741.27,pr:2594.45},{n:'HEALTHY (S)',nf:460.09,pr:1207.74},{n:'EMANA',nf:401.78,pr:2109.35},{n:'BLACK & DECKER',nf:47.63,pr:333.41},{n:'MEDLEY (S)',nf:4.03,pr:84.63},{n:'ALQUIMIA',nf:-70.45,pr:-369.86},{n:'ALTHAIA (G)',nf:-53.29,pr:null},{n:'AVVIO',nf:-287.76,pr:null}]
+ },
+ mauro:{
+  nome:'MAURO', regiao:'Reg. IV RJ (resp. Kris — lic. maternidade)',
+  vis:{foR:79.95,foV:5428.52,foC:6790.14,foFalta:-1361616,foVmd:258501,faR:82.66,faV:5207.58,faC:6300.00,faFalta:-1092422,faVmd:247980,rent:21.63,pos:77.60,prazo:45.42,inad:0.87,du:21,dur:0},
+  sup:[
+   {n:'MAURO SILVA (RJ I)',vend:9,cota:1650000,farma:451564.67,promo:522918.15,hpc:225252.83,eletr:110464.06,tf:1310199.71,proj:79.41,ol:28003.12,total:1338202.83,rent:21.95,inad:0.80,posi:82.83,prazo:43.64},
+   {n:'LAURO SILVA (RJ II)',vend:10,cota:1300000,farma:296383.93,promo:339826.66,hpc:88393.76,eletr:127145.31,tf:851749.66,proj:65.52,ol:62873.86,total:914623.52,rent:22.11,inad:1.43,posi:67.79,prazo:48.27},
+   {n:'LUCIANO (RJ III)',vend:15,cota:1420000,farma:548741.91,promo:426563.45,hpc:141878.52,eletr:258178.31,tf:1375362.19,proj:96.86,ol:74218.08,total:1449580.27,rent:21.00,inad:0.80,posi:78.05,prazo:44.70},
+   {n:'ELIAS (RJ V)',vend:11,cota:1680000,farma:729214.46,promo:582779.84,hpc:155994.33,eletr:178329.92,tf:1646318.55,proj:98.00,ol:46263.50,total:1692582.05,rent:21.61,inad:0.63,posi:81.19,prazo:45.89},
+   {n:'FERNANDA ALVES (MC)',vend:1,cota:250000,farma:0,promo:0,hpc:19144.16,eletr:4803.26,tf:33313.44,proj:13.33,ol:9584.23,total:33531.65,rent:16.93,inad:0.00,posi:4.61,prazo:48.53}],
+  supTotPct:{rent:21.58,inad:0.87,posi:67.19,prazo:45.42,vend:46},supNota:'',
+  ger:{placar:775.50,nivel:2,perf:81.63,rows:[
+   {i:'01-Meta de Vendas',meta:6300000,at:5207577.53,pct:82.66,pt:83,pe:2,pl:166},
+   {i:'02-Positivação Painel',meta:2579,at:2224,pct:86.23,pt:86,pe:1.5,pl:129},
+   {i:'03-Prazo Médio Vendas',meta:45,at:45.42,pct:99.08,pt:99,pe:1,pl:99},
+   {i:'04-Rentabilidade',meta:21,at:21.63,pct:103.00,pt:100,pe:1.5,pl:150},
+   {i:'05-Inadimplência',meta:1.5,at:0.87,pct:171.57,pt:100,pe:0.5,pl:50},
+   {i:'06-Devoluções',meta:1.5,at:2.69,pct:55.76,pt:56,pe:0.5,pl:28},
+   {i:'07-Pedido Eletrônico/B2List',meta:1032,at:464,pct:44.96,pt:45,pe:1,pl:45},
+   {i:'08-Campanha de Vendas',meta:6,at:1,pct:16.67,pt:17,pe:0.5,pl:8.5},
+   {i:'09-Consumo Partic',meta:520757.75,at:748647.75,pct:143.76,pt:100,pe:1,pl:100}],
+   tot:{meta:6824443.75,at:5958984.89,pct:803.69,pt:686,pe:9.5,pl:775.50}},
+  hpc:{tNF:5776297,tPos:2432,tMg:13.29,tPz:44.45,hNF:836891,hPos:1703,hMg:18.06,hPz:42.30,sNF:14.49,sPos:70.02,
+   eq:[{s:'MAURO SILVA (RJ I)',cart:606,pos:384,pc:63.37,qtd:25121,nf:294108.01,mg:15.62},{s:'LUCIANO (RJ III)',cart:1109,pos:494,pc:44.54,qtd:20278,nf:196274.28,mg:19.22},{s:'ELIAS (RJ V)',cart:755,pos:440,pc:58.28,qtd:22711,nf:196218.86,mg:18.19},{s:'LAURO SILVA (RJ II)',cart:834,pos:342,pc:41.01,qtd:11512,nf:113994.85,mg:20.89},{s:'FERNANDA ALVES (MC)',cart:477,pos:43,pc:9.01,qtd:1686,nf:36294.92,mg:22.30}],
+   mc:[{m:'FINI',qtd:30494,pos:735,nf:275114.38,mg:25.19},{m:'KATIGUA',qtd:3802,pos:414,nf:78431.90,mg:21.70},{m:'MAXINUTRI',qtd:4463,pos:402,nf:76716.19,mg:20.31},{m:'G-TECH',qtd:1531,pos:211,nf:75518.12,mg:8.03},{m:'GRANADO',qtd:6974,pos:256,nf:65984.65,mg:12.32},{m:'ARTE NATIVA (S)',qtd:8541,pos:722,nf:63951.55,mg:16.99},{m:'HERBAMED (S)',qtd:2380,pos:241,nf:48514.62,mg:22.04},{m:'PRUDENCE',qtd:6251,pos:107,nf:27042.56,mg:-26.36},{m:'ZIINZIIN (S)',qtd:1507,pos:165,nf:26913.99,mg:19.79},{m:'BIO INSTINTO',qtd:3506,pos:287,nf:25084.08,mg:15.08},{m:'NUTRIN (S)',qtd:222,pos:75,nf:23917.08,mg:21.11}]},
+  camp:[{n:'BIOCHIMICO/CRISTÁLIA RJ',meta:70970.82,venda:25217.72,pct:35.53,dif:-45753.10},{n:'BIOLAB RJ',meta:96421.14,venda:87282.03,pct:90.52,dif:-9139.11},{n:'GEOLAB RJ',meta:850000.00,venda:649232.70,pct:76.38,dif:-200767.30},{n:'NATULAB RJ',meta:214306.84,venda:154004.72,pct:71.86,dif:-60302.12},{n:'NEO QUIMICA RJ',meta:2114469.25,venda:1732980.07,pct:81.96,dif:-381489.18},{n:'ZYDUS RJ',meta:79244.57,venda:83414.39,pct:105.26,dif:4169.82}],
+  web:[{s:'MAURO SILVA (RJ I)',vd:101302.48,mg:18.66,cart:606,pos:73,pp:12.05,tkt:1387.71,vmd:4823.93},{s:'LAURO SILVA (RJ II)',vd:132672.92,mg:18.03,cart:834,pos:98,pp:11.75,tkt:1353.81,vmd:6317.76},{s:'LUCIANO (RJ III)',vd:273199.86,mg:18.58,cart:1109,pos:169,pp:15.24,tkt:1616.57,vmd:13009.52},{s:'ELIAS (RJ V)',vd:187647.06,mg:18.95,cart:755,pos:97,pp:12.85,tkt:1934.51,vmd:8935.57},{s:'FERNANDA ALVES (MC)',vd:5036.16,mg:18.90,cart:477,pos:5,pp:1.05,tkt:1007.23,vmd:839.36}],
+  webTot:{vd:699858.48,mg:18.59,cart:3781,pos:442,pp:11.69,tkt:1583.39,vmd:33326.59},
+  b2:[{s:'MAURO SILVA (RJ I)',vd:13146.87,mg:12.52,cart:606,pos:35,pp:5.78,tkt:375.62,vmd:1195.17},{s:'LAURO SILVA (RJ II)',vd:2255.09,mg:14.35,cart:834,pos:7,pp:0.84,tkt:322.16,vmd:563.77},{s:'LUCIANO (RJ III)',vd:1414.18,mg:14.41,cart:1109,pos:10,pp:0.90,tkt:141.42,vmd:235.70},{s:'ELIAS (RJ V)',vd:887.92,mg:9.33,cart:755,pos:5,pp:0.66,tkt:177.58,vmd:887.92},{s:'FERNANDA ALVES (MC)',vd:0,mg:0,cart:477,pos:0,pp:0,tkt:0,vmd:0}],
+  b2Tot:{vd:17704.06,mg:12.74,cart:3781,pos:57,pp:1.51,tkt:310.60,vmd:1041.42},
+  cartTot:3781,
+  sem:{vdnf:[5248110.94,5470604.45,6358205.72,5568659.78,5448665.97,5538954.02],pos:[2066,2236,2293,2146,2248,2311],posCart:[54.64,59.14,60.65,56.76,59.46,61.12],sku:[2322,2341,2424,2387,2440,2488],qtd:[838079,844655,963945,847456,735402,778227],varMes:[1.56,4.24,16.22,-12.42,-2.15,1.66],varAno:[-5.08,24.66,36.37,22.62,-4.65,11.28],vmd:[249910.04,303922.47,289009.35,293087.36,272433.30,263759.72],mg:[12.20,13.70,14.40,13.12,14.66,13.88],total:{vdnf:33633200.88,pos:2945,posCart:77.89,sku:3365,qtd:5007764,varMes:1.12,varAno:12.81,vmd:277960.34,mg:13.69}},
+  com:{vdnf:[5865727.61,6073282.69,7086297.11,5980665.75,5700580.85,5776297.15],pos:[2221,2377,2497,2300,2323,2432],posCart:[58.74,62.87,66.04,60.83,61.44,64.32],sku:[2361,2404,2473,2433,2494,2513],qtd:[921016,900357,1094420,884432,755684,804154],varMes:[4.14,3.54,16.68,-15.60,-4.68,1.33],varAno:[-0.57,29.22,36.49,16.26,-10.42,7.59],vmd:[279320.36,337404.59,322104.41,314771.88,285029.04,275061.78],mg:[9.59,12.91,10.90,13.03,14.21,13.29],total:{vdnf:36482851.36,pos:3141,posCart:83.07,sku:3383,qtd:5360063,varMes:0.40,varAno:11.68,vmd:301511.17,mg:12.27}},
+  mkMetas:[
+   {n:'NEOQ (S)',meta:1226005.33,nf:1016333.97,pct:82.90},{n:'NEOQ (G)',meta:1125220.37,nf:725514.18,pct:64.48},{n:'EURO (G)',meta:798678.28,nf:396000.57,pct:49.58},{n:'GEOLAB (G)',meta:528878.12,nf:342132.22,pct:64.69},{n:'SANDOZ (G)',meta:435910.58,nf:319132.66,pct:73.21},{n:'GEOLAB (S)',meta:415712.11,nf:323463.19,pct:77.81},{n:'PHARLAB (G)',meta:343809.64,nf:208219.48,pct:60.56},{n:'MULTILAB (S)',meta:256845.13,nf:93462.28,pct:36.39},{n:'LEGRAND (G)',meta:226377.69,nf:165650.56,pct:73.17},{n:'FINI',meta:207616.92,nf:275114.38,pct:132.51,p:146.46,pr:304073.79},{n:'VITAMEDIC (G)',meta:161853.20,nf:72643.78,pct:44.88},{n:'NATULAB',meta:161475.90,nf:159331.33,pct:98.67},{n:'KATIGUA',meta:143820.72,nf:78431.90,pct:54.53},{n:'GRANADO',meta:139791.98,nf:65984.65,pct:47.20},{n:'BELFAR (S)',meta:129275.27,nf:34565.87,pct:26.74},{n:'MEDQ (S)',meta:111818.39,nf:925.98,pct:0.83,p:1.02,pr:1143.86},{n:'HERBAMED (S)',meta:86626.57,nf:48514.62,pct:56.00},{n:'BIOLAB (G)',meta:79619.52,nf:60911.87,pct:76.50},{n:'ARTE NATIVA (S)',meta:78434.95,nf:63951.55,pct:81.53},{n:'NUTRIN (S)',meta:76630.25,nf:23917.08,pct:31.21,p:36.41,pr:27903.26},{n:'LEGRAND (S)',meta:76403.60,nf:68808.40,pct:90.06},{n:'UNICHEM',meta:75273.12,nf:21920.86,pct:29.12,p:32.19,pr:24228.32},{n:'BRASTERAPICA (S)',meta:72296.54,nf:5582.47,pct:7.72,p:10.13,pr:7326.99},{n:'DELTA (S)',meta:70526.75,nf:56902.54,pct:80.68},{n:'VITAMEDIC (S)',meta:64175.99,nf:36571.90,pct:56.99},{n:'PHARMASCIENCE (S)',meta:59445.86,nf:39106.13,pct:65.78},{n:'ZYDUS (G)',meta:52022.29,nf:90074.57,pct:173.15},{n:'AIRELA (S)',meta:51761.22,nf:43699.97,pct:84.43},{n:'SANDOZ (S)',meta:51616.50,nf:14514.12,pct:28.12},{n:'NEOQ (VIT)',meta:50984.33,nf:26760.76,pct:52.49},{n:'PHARMASCIENCE (G)',meta:50982.70,nf:36799.11,pct:72.18},{n:'CRISTALIA',meta:47337.30,nf:20265.87,pct:42.81,p:44.95,pr:21279.16},{n:'BIOLAB (S)',meta:46351.91,nf:39636.63,pct:85.51},{n:'FARMAX (S)',meta:42184.14,nf:4044.37,pct:9.59,p:11.19,pr:4718.43},{n:'MAXINUTRI',meta:41397.37,nf:76716.19,pct:185.32},{n:'NATIVITA (S)',meta:41009.78,nf:25452.06,pct:62.06},{n:'GREENPHARMA (G)',meta:40189.13,nf:11661.97,pct:29.02,p:30.47,pr:12245.07},{n:'GLOBO (G)',meta:35850.44,nf:30097.10,pct:83.95},{n:'NATIVITA (G)',meta:32820.55,nf:36690.76,pct:111.79},{n:'BIOCHIMICO',meta:32229.39,nf:5041.16,pct:15.64,p:19.32,pr:6227.32},{n:'SANFARMA (S)',meta:32113.28,nf:11798.43,pct:36.74},{n:'EMS (S)',meta:31389.57,nf:33325.05,pct:106.17},{n:'PRUDENCE',meta:28709.90,nf:27042.56,pct:94.19,p:98.90,pr:28394.69},{n:'G-TECH',meta:24658.85,nf:75518.12,pct:306.25},{n:'PHARLAB (S)',meta:23248.10,nf:22469.82,pct:96.65},{n:'HEARST (S)',meta:21586.27,nf:null,pct:0,p:0,pr:0},{n:'BIO INSTINTO',meta:21283.56,nf:25084.08,pct:117.86},{n:'MEDQ (G)',meta:21119.81,nf:7761.25,pct:36.75,p:40.62,pr:8578.22},{n:'LEBON',meta:20706.82,nf:10089.52,pct:48.73},{n:'UNIAOQ (S)',meta:20114.58,nf:16850.90,pct:83.77,p:87.96,pr:17693.45},{n:'CAZI (S)',meta:17851.85,nf:12118.26,pct:67.88},{n:'ZIINZIIN (S)',meta:16173.70,nf:26913.99,pct:166.41},{n:'SUNLESS',meta:15507.29,nf:928.37,pct:5.99,p:20.95,pr:3249.30},{n:'CONFIRME',meta:12218.39,nf:8868.43,pct:72.58,p:84.68,pr:10346.50},{n:'MAKROFARMA (S)',meta:12000.79,nf:10499.83,pct:87.49},{n:'FORTLIFE (CONSUMO)',meta:11811.86,nf:7146.57,pct:60.50,p:66.87,pr:7898.84},{n:'DELTA (G)',meta:11348.02,nf:7396.34,pct:65.18},{n:'BLAU',meta:9690.65,nf:57.76,pct:0.60,p:4.17,pr:404.32},{n:'WALDEMIRO PEREIRA (S)',meta:8863.45,nf:12912.12,pct:145.68,p:152.96,pr:13557.73},{n:'GLOBO (S)',meta:8186.23,nf:8980.61,pct:109.70},{n:'BELFAR (G)',meta:8012.01,nf:1959.84,pct:24.46,p:51.37,pr:4115.66},{n:'VIDORA',meta:7002.92,nf:8914.81,pct:127.30},{n:'BELLAPHYTUS',meta:6408.74,nf:2765.42,pct:43.15,p:47.69,pr:3056.52},{n:'GLAXO',meta:6026.42,nf:35361.00,pct:586.77},{n:'UNIAOQ (G)',meta:5955.97,nf:2377.25,pct:39.91,p:44.12,pr:2627.49},{n:'IMEC (S)',meta:5862.30,nf:21488.89,pct:366.56},{n:'NUTIVIT',meta:4083.89,nf:6112.63,pct:149.68,p:196.45,pr:8022.83},{n:'GREENPHARMA (S)',meta:3666.58,nf:3565.68,pct:97.25},{n:'CIFARMA (G)',meta:3515.11,nf:791.71,pct:22.52,p:157.66,pr:5541.97},{n:'SINTER',meta:3268.64,nf:587.25,pct:17.97,p:53.90,pr:1761.75},{n:'CIFARMA (S)',meta:2260.53,nf:9641.46,pct:426.51,p:447.84,pr:10123.53},{n:'LANSINOH',meta:557.14,nf:null,pct:0,p:0,pr:0}],
+  mkSem:[{n:'MEDLEY (G)',nf:107742.44,pr:107742.44},{n:'SANOFI (S)',nf:30808.15,pr:32348.56},{n:'GERMED (G)',nf:24820.19,pr:57913.78},{n:'MERCK (G)',nf:23523.89,pr:23523.89},{n:'UNIPHAR',nf:2046.13,pr:2261.51},{n:'DENTALCLEAN',nf:858.26,pr:1386.42},{n:'DANA',nf:713.04,pr:14973.84},{n:'PIRACANJUBA',nf:639.25,pr:1678.03},{n:'DOMINA FARMA (S)',nf:445.78,pr:9361.38},{n:'TEUTO (G)',nf:210.99,pr:1107.70},{n:'NUTRIEX',nf:204.84,pr:1433.88},{n:'ALMEIDA PRADO (S)',nf:168.24,pr:588.84},{n:'ABELHA RAINHA',nf:162.09,pr:1134.63},{n:'EMANA',nf:107.67,pr:2261.07},{n:'ALTHAIA (G)',nf:-30.62,pr:null}]
+ },
+ alberto:{
+  nome:'ALBERTO', regiao:'Reg. Sul (PR/SC/RS)',
+  vis:{foR:78.19,foV:5172.33,foC:6615.35,foFalta:-1443021,foVmd:246302,faR:79.00,faV:4977.23,faC:6300.00,faFalta:-1322771,faVmd:237011,rent:18.60,pos:49.51,prazo:43.03,inad:2.43,du:21,dur:0},
+  sup:[
+   {n:'EDIOMAR VICENTE (PR I)',vend:10,cota:600000,farma:274290.00,promo:197321.72,hpc:139456.28,eletr:59372.54,tf:670440.54,proj:111.74,ol:18821.59,total:689262.13,rent:19.75,inad:0.52,posi:46.03,prazo:45.08},
+   {n:'MAURO (PR II)',vend:10,cota:550000,farma:156761.13,promo:107675.90,hpc:127279.43,eletr:101561.34,tf:493277.80,proj:89.69,ol:62301.59,total:555579.37,rent:19.14,inad:0.10,posi:44.51,prazo:48.07},
+   {n:'CLEOBIS (PR III)',vend:11,cota:590000,farma:333911.82,promo:99540.86,hpc:118014.33,eletr:103113.88,tf:654580.89,proj:110.95,ol:43497.69,total:698078.58,rent:18.18,inad:1.25,posi:68.18,prazo:43.68},
+   {n:'LUCIO NUNES',vend:11,cota:800000,farma:202835.77,promo:176880.82,hpc:129312.38,eletr:209557.02,tf:718585.99,proj:89.82,ol:2272.66,total:720858.67,rent:18.86,inad:10.63,posi:43.47,prazo:43.32},
+   {n:'GUILHERME (SC II)',vend:9,cota:850000,farma:180562.00,promo:99650.65,hpc:95324.69,eletr:347219.94,tf:722757.28,proj:85.03,ol:25717.66,total:748474.94,rent:18.36,inad:0.43,posi:47.97,prazo:42.54},
+   {n:'MICHELE PAULA (MC SC I)',vend:1,cota:850000,farma:377368.75,promo:288416.41,hpc:163288.20,eletr:3590.80,tf:840822.28,proj:98.92,ol:15394.13,total:848058.29,rent:18.88,inad:3.03,posi:45.97,prazo:42.26},
+   {n:'KARIN VOLPATO (MC PR I)',vend:1,cota:900000,farma:212686.52,promo:271569.60,hpc:56153.75,eletr:4925.22,tf:545335.09,proj:60.59,ol:10940.79,total:556275.88,rent:15.96,inad:0.00,posi:4.16,prazo:59.36},
+   {n:'SIDNEY SCARPARO (MC RS I)',vend:1,cota:860000,farma:214075.24,promo:0,hpc:51711.07,eletr:652.41,tf:266438.72,proj:30.98,ol:0,total:266438.72,rent:16.82,inad:0.00,posi:3.32,prazo:35.41},
+   {n:'LEONARDO ALMEIDA (MC RS)',vend:1,cota:300000,farma:15498.73,promo:0,hpc:55844.21,eletr:1805.90,tf:73148.84,proj:24.38,ol:16156.12,total:89304.96,rent:15.71,inad:12.54,posi:0.08,prazo:8.86}],
+  supTotPct:{rent:23.89,inad:2.43,posi:34.64,prazo:44.61,vend:55},supNota:'',
+  ger:{placar:696.50,nivel:2,perf:73.32,rows:[
+   {i:'01-Meta de Vendas',meta:6300000,at:4977229.31,pct:79.00,pt:79,pe:2,pl:158},
+   {i:'02-Positivação Painel',meta:4201,at:2311,pct:55.01,pt:55,pe:1.5,pl:82.5},
+   {i:'03-Prazo Médio Vendas',meta:45,at:43.03,pct:104.58,pt:100,pe:1,pl:100},
+   {i:'04-Rentabilidade',meta:21,at:18.60,pct:88.57,pt:89,pe:1.5,pl:133.5},
+   {i:'05-Inadimplência',meta:1.5,at:2.43,pct:61.79,pt:62,pe:0.5,pl:31},
+   {i:'06-Devoluções',meta:1.5,at:2.61,pct:57.47,pt:57,pe:0.5,pl:28.5},
+   {i:'07-Pedido Eletrônico/B2List',meta:1680,at:717,pct:42.68,pt:43,pe:1,pl:43},
+   {i:'08-Campanha de Vendas',meta:5,at:2,pct:40.00,pt:40,pe:0.5,pl:20},
+   {i:'09-Consumo Partic',meta:497722.93,at:1109163.37,pct:222.85,pt:100,pe:1,pl:100}],
+   tot:{meta:6803677.93,at:6089489.35,pct:751.95,pt:625,pe:9.5,pl:696.50}},
+  hpc:{tNF:5833849,tPos:3569,tMg:9.56,tPz:47.69,hNF:1155917,hPos:2726,hMg:16.43,hPz:46.77,sNF:19.81,sPos:76.38,
+   eq:[{s:'LUCIO NUNES',cart:1262,pos:402,pc:31.85,qtd:12617,nf:183071.89,mg:17.04},{s:'MICHELE PAULA (MC SC I)',cart:881,pos:720,pc:81.73,qtd:11538,nf:176118.18,mg:20.10},{s:'GUILHERME (SC II)',cart:1187,pos:432,pc:36.39,qtd:15454,nf:175106.06,mg:14.46},{s:'MAURO (PR II)',cart:880,pos:255,pc:28.98,qtd:13633,nf:156232.04,mg:17.27},{s:'EDIOMAR VICENTE (PR I)',cart:1052,pos:319,pc:30.32,qtd:10353,nf:155618.30,mg:15.78},{s:'CLEOBIS (PR III)',cart:1029,pos:401,pc:38.97,qtd:12996,nf:149948.12,mg:19.04},{s:'LEONARDO ALMEIDA (MC RS)',cart:1283,pos:19,pc:1.48,qtd:2593,nf:75165.73,mg:6.37},{s:'KARIN VOLPATO (MC PR I)',cart:746,pos:171,pc:22.92,qtd:8823,nf:58247.57,mg:13.61},{s:'SIDNEY SCARPARO (MC RS I)',cart:392,pos:7,pc:1.79,qtd:4243,nf:26408.74,mg:19.00}],
+   mc:[{m:'G-TECH',qtd:5319,pos:1037,nf:286031.42,mg:11.72},{m:'FINI',qtd:10749,pos:398,nf:191772.93,mg:27.79},{m:'BIO INSTINTO',qtd:17282,pos:739,nf:111616.38,mg:12.98},{m:'MEDLEVENSOHN (S)',qtd:2569,pos:231,nf:85239.24,mg:12.59},{m:'HERBAMED (S)',qtd:3801,pos:577,nf:78114.79,mg:20.15},{m:'KATIGUA',qtd:3429,pos:378,nf:55458.54,mg:18.40},{m:'ARTE NATIVA (S)',qtd:4798,pos:756,nf:46659.50,mg:13.07},{m:'GRANADO',qtd:2916,pos:445,nf:34110.71,mg:13.08},{m:'FARMAX (S)',qtd:7759,pos:537,nf:29217.12,mg:15.92},{m:'LANSINOH',qtd:550,pos:8,nf:28724.14,mg:15.11},{m:'NUTRIN (S)',qtd:471,pos:150,nf:26808.90,mg:16.97}]},
+  camp:[{n:'BRASTERÁPICA PR-SC',meta:33523.52,venda:7229.91,pct:21.57,dif:-26293.61},{n:'GEOLAB PR-SC',meta:167280.38,venda:99625.00,pct:59.56,dif:-67655.38},{n:'NATULAB PR-SC',meta:167360.24,venda:211392.68,pct:126.31,dif:44032.44},{n:'PHARMASCIENSE PR-SC',meta:95596.20,venda:86888.34,pct:90.89,dif:-8707.86},{n:'ZYDUS PR-SC',meta:78716.20,venda:114630.81,pct:145.63,dif:35914.61}],
+  web:[{s:'EDIOMAR VICENTE (PR I)',vd:76762.51,mg:20.15,cart:1052,pos:67,pp:6.37,tkt:1145.71,vmd:3655.36},{s:'MAURO (PR II)',vd:132419.88,mg:18.81,cart:880,pos:103,pp:11.70,tkt:1285.63,vmd:6305.71},{s:'CLEOBIS (PR III)',vd:125801.53,mg:19.28,cart:1029,pos:111,pp:10.79,tkt:1133.35,vmd:5990.55},{s:'LUCIO NUNES',vd:202461.39,mg:18.86,cart:1262,pos:188,pp:14.90,tkt:1076.92,vmd:9641.02},{s:'GUILHERME (SC II)',vd:348375.62,mg:17.32,cart:1187,pos:262,pp:22.07,tkt:1329.68,vmd:16589.32},{s:'MICHELE PAULA (MC SC I)',vd:3673.74,mg:18.08,cart:881,pos:12,pp:1.36,tkt:306.15,vmd:367.37},{s:'KARIN VOLPATO (MC PR I)',vd:6485.49,mg:15.20,cart:746,pos:1,pp:0.13,tkt:6485.49,vmd:463.25},{s:'SIDNEY SCARPARO (MC RS I)',vd:704.69,mg:24.47,cart:392,pos:1,pp:0.26,tkt:704.69,vmd:704.69},{s:'LEONARDO ALMEIDA (MC RS)',vd:1966.54,mg:15.93,cart:1283,pos:3,pp:0.23,tkt:655.51,vmd:491.64}],
+  webTot:{vd:898651.59,mg:18.32,cart:8712,pos:748,pp:8.59,tkt:1201.41,vmd:42792.93},
+  b2:[{s:'EDIOMAR VICENTE (PR I)',vd:1055.73,mg:14.29,cart:1052,pos:1,pp:0.10,tkt:1055.73,vmd:527.87},{s:'MAURO (PR II)',vd:325.50,mg:10.46,cart:880,pos:1,pp:0.11,tkt:325.50,vmd:325.50},{s:'CLEOBIS (PR III)',vd:3677.86,mg:9.76,cart:1029,pos:5,pp:0.49,tkt:735.57,vmd:367.79},{s:'LUCIO NUNES',vd:8233.83,mg:4.50,cart:1262,pos:24,pp:1.90,tkt:343.08,vmd:1372.30},{s:'GUILHERME (SC II)',vd:976.86,mg:-83.47,cart:1187,pos:6,pp:0.51,tkt:162.81,vmd:976.86},{s:'MICHELE PAULA (MC SC I)',vd:0,mg:0,cart:881,pos:0,pp:0,tkt:0,vmd:0},{s:'KARIN VOLPATO (MC PR I)',vd:0,mg:0,cart:746,pos:0,pp:0,tkt:0,vmd:0},{s:'SIDNEY SCARPARO (MC RS I)',vd:0,mg:0,cart:392,pos:0,pp:0,tkt:0,vmd:0},{s:'LEONARDO ALMEIDA (MC RS)',vd:0,mg:0,cart:1283,pos:0,pp:0,tkt:0,vmd:0}],
+  b2Tot:{vd:14269.78,mg:0.33,cart:8712,pos:37,pp:0.42,tkt:385.67,vmd:1097.68},
+  cartTot:8712,
+  sem:{vdnf:[4531295.73,4613851.53,6517662.59,5105794.83,6013602.22,5598708.60],pos:[3116,3272,3368,3403,3432,3488],posCart:[35.77,37.56,38.66,39.06,39.39,40.04],sku:[2366,2295,2644,2485,2601,2660],qtd:[682633,584639,873897,708194,823691,657647],varMes:[0.80,1.82,41.26,-21.66,17.78,-6.90],varAno:[-9.44,-4.92,31.69,53.28,16.47,20.10],vmd:[215775.99,256325.08,296257.39,255289.74,300680.11,266605.17],mg:[8.82,12.94,9.05,11.23,11.15,9.70],total:{vdnf:32380915.50,pos:4669,posCart:53.59,sku:3710,qtd:4330701,varMes:3.53,varAno:15.80,vmd:265417.34,mg:10.42}},
+  com:{vdnf:[4835407.18,5211837.73,6905219.48,5504166.20,6267937.84,5833849.08],pos:[3277,3422,3473,3505,3519,3569],posCart:[37.61,39.28,39.86,40.23,40.39,40.97],sku:[2408,2335,2685,2522,2617,2681],qtd:[755822,654093,911372,774235,852971,679398],varMes:[-3.03,7.78,32.49,-20.29,13.88,-6.93],varAno:[-14.39,-6.90,20.86,44.21,6.52,9.74],vmd:[230257.48,289546.54,313873.61,275208.31,313396.89,277802.34],mg:[7.52,10.93,8.22,10.23,10.81,9.56],total:{vdnf:34558417.51,pos:4820,posCart:55.33,sku:3724,qtd:4627891,varMes:2.51,varAno:8.07,vmd:283265.72,mg:9.54}},
+  mkMetas:[
+   {n:'NEOQ (S)',meta:1751682.45,nf:1102701.71,pct:62.95},{n:'NEOQ (G)',meta:1115376.25,nf:1126499.37,pct:101.00},{n:'EURO (G)',meta:381852.25,nf:265402.51,pct:69.50},{n:'LEGRAND (S)',meta:303767.95,nf:256561.51,pct:84.46},{n:'NATULAB',meta:292090.88,nf:226917.32,pct:77.69},{n:'DELTA (S)',meta:233396.14,nf:87200.35,pct:37.36},{n:'MULTILAB (S)',meta:208015.06,nf:147055.34,pct:70.69},{n:'FINI',meta:176190.26,nf:191772.93,pct:108.84,p:114.29,pr:201361.58},{n:'CAZI (S)',meta:149484.82,nf:196591.31,pct:131.51,p:162.46,pr:242848.09},{n:'GEOLAB (S)',meta:123455.70,nf:60082.06,pct:48.67},{n:'BIOLAB (S)',meta:120699.10,nf:7578.44,pct:6.28,p:7.76,pr:9361.60},{n:'EMS (S)',meta:119235.56,nf:184441.70,pct:154.69},{n:'G-TECH',meta:114641.74,nf:286031.42,pct:249.50},{n:'FARMAX (S)',meta:101753.94,nf:29217.12,pct:28.71,p:31.74,pr:32292.61},{n:'BIO INSTINTO',meta:96894.09,nf:111616.38,pct:115.19},{n:'BIOLAB (G)',meta:93628.48,nf:12816.81,pct:13.69,p:17.97,pr:16822.06},{n:'ZYDUS (G)',meta:93202.68,nf:115449.42,pct:123.87},{n:'GEOLAB (G)',meta:85350.83,nf:41602.11,pct:48.74},{n:'PHARLAB (G)',meta:82741.92,nf:80914.20,pct:97.79},{n:'KATIGUA',meta:76580.46,nf:55458.54,pct:72.42},{n:'SANDOZ (G)',meta:76081.14,nf:46299.05,pct:60.85},{n:'PHARMASCIENCE (G)',meta:74062.97,nf:41570.76,pct:56.13,p:65.48,pr:48499.22},{n:'BELFAR (S)',meta:73814.27,nf:8991.74,pct:12.18,p:12.79,pr:9441.33},{n:'TEUTO (G)',meta:71299.10,nf:134220.98,pct:188.25},{n:'ARTE NATIVA (S)',meta:68045.09,nf:46659.50,pct:68.57},{n:'NEOQ (VIT)',meta:67612.79,nf:50015.00,pct:73.97},{n:'PHARMASCIENCE (S)',meta:58410.69,nf:45990.07,pct:78.74},{n:'AIRELA (S)',meta:56290.23,nf:42493.44,pct:75.49},{n:'VITAMEDIC (G)',meta:47074.88,nf:20450.90,pct:43.44},{n:'HERBAMED (S)',meta:46591.74,nf:78114.79,pct:167.66},{n:'TEUTO (S)',meta:45611.05,nf:110693.28,pct:242.69},{n:'BRASTERAPICA (S)',meta:44097.72,nf:7349.59,pct:16.67,p:17.50,pr:7717.07},{n:'SANFARMA (S)',meta:42544.70,nf:15890.16,pct:37.35,p:39.22,pr:16684.67},{n:'VITAMEDIC (S)',meta:40180.02,nf:8023.40,pct:19.97,p:22.07,pr:8867.97},{n:'LEGRAND (G)',meta:36470.45,nf:7140.22,pct:19.58,p:22.84,pr:8330.26},{n:'MEDQ (S)',meta:30401.65,nf:5377.69,pct:17.69,p:18.57,pr:5646.57},{n:'UNIAOQ (S)',meta:29543.95,nf:12784.76,pct:43.27,p:60.58,pr:17898.66},{n:'MAKROFARMA (S)',meta:29506.86,nf:32919.03,pct:111.56,p:130.16,pr:38405.54},{n:'CONFIRME',meta:28704.07,nf:24130.59,pct:84.07},{n:'LEBON',meta:27919.93,nf:13514.24,pct:48.40,p:50.82,pr:14189.95},{n:'GRANADO',meta:27615.30,nf:34110.71,pct:123.52,p:129.70,pr:35816.25},{n:'NUTRIN (S)',meta:26530.35,nf:26808.90,pct:101.05},{n:'VIDORA',meta:25445.33,nf:18123.28,pct:71.22},{n:'GREENPHARMA (S)',meta:24124.20,nf:6683.95,pct:27.71,p:38.79,pr:9357.53},{n:'BELFAR (G)',meta:23984.37,nf:125.23,pct:0.52,p:1.83,pr:438.31},{n:'PHARLAB (S)',meta:23167.63,nf:39733.45,pct:171.50},{n:'CIFARMA (S)',meta:21968.15,nf:9716.58,pct:44.23,p:48.89,pr:10739.38},{n:'HEARST (S)',meta:21272.20,nf:-85.59,pct:-0.40,p:-0.40,pr:null},{n:'DANA',meta:20310.95,nf:13800.97,pct:67.95},{n:'NUTRIEX',meta:19464.69,nf:21005.11,pct:107.91},{n:'PRUDENCE',meta:18817.38,nf:26382.98,pct:140.21},{n:'LANSINOH',meta:15603.53,nf:28724.14,pct:184.09,p:773.17,pr:120641.39},{n:'BELLAPHYTUS',meta:15224.39,nf:12238.09,pct:80.38},{n:'GREENPHARMA (G)',meta:14995.10,nf:14977.46,pct:99.88},{n:'MEDLEVENSOHN (S)',meta:14318.35,nf:85239.24,pct:595.31},{n:'WALDEMIRO PEREIRA (S)',meta:13762.65,nf:22205.98,pct:161.35,p:169.42,pr:23316.28},{n:'FORTLIFE (CONSUMO)',meta:12971.87,nf:5615.29,pct:43.29,p:47.84,pr:6206.37},{n:'IMEC (S)',meta:12332.64,nf:15686.30,pct:127.19},{n:'ABOVE',meta:12158.03,nf:10342.69,pct:85.07},{n:'MEDQ (G)',meta:11792.87,nf:1148.78,pct:9.74,p:34.09,pr:4020.73},{n:'GERMED (G)',meta:6351.20,nf:16585.40,pct:261.14,p:498.54,pr:31663.04},{n:'BIOCHIMICO',meta:6343.85,nf:6292.45,pct:99.19},{n:'GLOBO (G)',meta:5686.80,nf:4923.96,pct:86.59,p:90.92,pr:5170.16},{n:'SUNLESS',meta:5162.32,nf:621.90,pct:12.05,p:42.16,pr:2176.65},{n:'CIFARMA (G)',meta:4163.06,nf:null,pct:0,p:0,pr:0},{n:'DELTA (G)',meta:4032.25,nf:1116.13,pct:27.68,p:48.44,pr:1953.23},{n:'CRISTALIA',meta:3628.51,nf:5696.15,pct:156.98},{n:'SINTER',meta:2979.16,nf:4244.66,pct:142.48,p:166.22,pr:4952.10},{n:'ZIINZIIN (S)',meta:2928.32,nf:15421.76,pct:526.64},{n:'BIOSINTETICA (G)',meta:2847.67,nf:-20.30,pct:-0.71,p:-0.71,pr:null},{n:'UNICHEM',meta:2422.91,nf:3875.52,pct:159.95,p:1119.67,pr:27128.64},{n:'BLAU',meta:1465.69,nf:699.47,pct:47.72,p:143.17,pr:2098.41},{n:'UNIAOQ (G)',meta:1360.08,nf:491.31,pct:36.12,p:252.87,pr:3439.17},{n:'MALAVASI',meta:1277.80,nf:null,pct:0,p:0,pr:0},{n:'NATIVITA (S)',meta:1223.03,nf:8272.16,pct:676.37},{n:'DOMINA FARMA (S)',meta:1032.50,nf:null,pct:0,p:0,pr:0},{n:'COTY',meta:975.86,nf:6037.57,pct:618.69,p:2165.42,pr:21131.50},{n:'SANDOZ (S)',meta:803.56,nf:1125.58,pct:140.07,p:420.22,pr:3376.74},{n:'NATIVITA (G)',meta:726.17,nf:5324.20,pct:733.19},{n:'GLOBO (S)',meta:658.45,nf:145.69,pct:22.13,p:154.88,pr:1019.83},{n:'PIRACANJUBA',meta:529.79,nf:829.75,pct:156.62,p:274.08,pr:1452.06},{n:'GLAXO',meta:280.43,nf:null,pct:0,p:0,pr:0},{n:'NUTIVIT',meta:273.57,nf:175.91,pct:64.30,p:337.58,pr:923.53},{n:'BIOSINTETICA (S)',meta:206.38,nf:null,pct:0,p:0,pr:0},{n:'EMS (G)',meta:156.54,nf:null,pct:0,p:0,pr:0}],
+  mkSem:[{n:'MERCK (G)',nf:6108.86,pr:42762.02},{n:'MEDLEY (G)',nf:4512.23,pr:7288.99},{n:'DENTALCLEAN',nf:2563.82,pr:2833.70},{n:'FLOPI',nf:2002.08,pr:3503.64},{n:'UNIPHAR',nf:1509.32,pr:1584.79},{n:'ALMEIDA PRADO (S)',nf:1342.65,pr:4027.95},{n:'CIMED (S)',nf:1172.99,pr:4105.47},{n:'PARAIBUNA',nf:1041.66,pr:1988.62},{n:'EMANA',nf:375.36,pr:2627.52},{n:'ABELHA RAINHA',nf:194.70,pr:1022.18},{n:'MAXINUTRI',nf:42.86,pr:900.06}]
+ }
+};
+// normaliza p/pr das marcas
+for(const k of ['rosa','lucilene','mauro','alberto']){DADOS[k].mkMetas.forEach(m=>{if(m.p==null)m.p=m.pct;if(m.pr==null)m.pr=(m.nf==null?0:m.nf);});}
+
+/* ===== estado ===== */
+let cur='lucilene', olMode='com', canalMode='web', mkFilterMode='meta';
+const charts={};
+function mk(id,cfg){const el=document.getElementById(id);if(!el)return;if(charts[id]){charts[id].destroy();}charts[id]=new Chart(el,cfg);}
+function D(){return DADOS[cur];}
+
+/* ===== VISÃO GERAL ===== */
+function renderVisao(){
+ const d=D(),v=d.vis;
+ document.getElementById('visaoLead').innerHTML=`Painel "Performance Equipe" — <b>Gerente ${d.nome} · ${d.regiao}</b>. Base: mês corrente (${v.du} dias úteis, ${v.dur} restantes).`;
+ const faltaK=(val)=>val>=0?`<div class="kpi green"><div class="label">Falta p/ Meta</div><div class="value green">+${compactBRL(val)}</div><div class="foot">meta superada</div></div>`:`<div class="kpi red"><div class="label">Falta p/ Meta</div><div class="value red">${compactBRL(val)}</div><div class="foot">R$ ${fmtBRL(val)}</div></div>`;
+ document.getElementById('kpiVisao').innerHTML=`
+  <div class="kpi ${v.foR>=100?'green':''}"><div class="label">Realizado Farma + OL x Cota</div><div class="value ${v.foR>=100?'green':''}">${pct(v.foR)}</div><div class="foot">${v.foV.toLocaleString('pt-BR')} Mil de ${v.foC.toLocaleString('pt-BR')} Mil</div></div>
+  <div class="kpi ${v.faR>=100?'green':''}"><div class="label">Realizado Farma x Cota</div><div class="value ${v.faR>=100?'green':''}">${pct(v.faR)}</div><div class="foot">${v.faV.toLocaleString('pt-BR')} Mil de ${v.faC.toLocaleString('pt-BR')} Mil</div></div>
+  ${faltaK(v.foFalta)}
+  ${faltaK(v.faFalta)}
+  <div class="kpi"><div class="label">Rentabilidade</div><div class="value">${pct(v.rent)}</div></div>
+  <div class="kpi amber"><div class="label">Positivação</div><div class="value">${pct(v.pos)}</div></div>
+  <div class="kpi"><div class="label">Prazo Médio</div><div class="value">${v.prazo.toLocaleString('pt-BR')}</div><div class="foot">dias</div></div>
+  <div class="kpi green"><div class="label">Inadimplência</div><div class="value green">${pct(v.inad)}</div></div>
+  <div class="kpi"><div class="label">Venda Média/Dia (F+OL)</div><div class="value">${compactBRL(v.foVmd)}</div><div class="foot">${fmtBRL(v.foVmd)}</div></div>
+  <div class="kpi"><div class="label">Venda Média/Dia (Farma)</div><div class="value">${compactBRL(v.faVmd)}</div><div class="foot">${fmtBRL(v.faVmd)}</div></div>`;
+ mk('g_ating',{type:'bar',data:{labels:['Farma + OL','Farma'],datasets:[{label:'Realizado %',data:[v.foR,v.faR],backgroundColor:[AZUL,VERDE],borderRadius:6,datalabels:dlPctVal}]},options:{indexAxis:'y',scales:{x:{min:0,max:Math.max(115,v.foR+8),ticks:{callback:x=>x+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x+'%'}}}}});
+ mk('g_realcota',{type:'bar',data:{labels:['Farma + OL','Farma'],datasets:[{label:'Realizado (Mil)',data:[v.foV,v.faV],backgroundColor:AZUL2,borderRadius:5,datalabels:dlMil},{label:'Cota (Mil)',data:[v.foC,v.faC],backgroundColor:CINZA,borderRadius:5,datalabels:dlMil}]},options:{scales:{y:{ticks:{callback:x=>(x/1000).toFixed(0)+' Mi'}}},plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toLocaleString('pt-BR')+' Mil'}}}}});
+ mk('g_regfat',{type:'bar',data:{labels:d.sup.map(s=>s.n),datasets:[{label:'Total (R$)',data:d.sup.map(s=>s.total),backgroundColor:PALETA,borderRadius:5,datalabels:dlMoney}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'R$ '+fmtBRL(c.parsed.y)}}},scales:{y:{ticks:{callback:x=>fmtMi(x)}}}}});
+ const cf=d.sup.reduce((a,s)=>a+s.farma,0),cp=d.sup.reduce((a,s)=>a+s.promo,0),ch=d.sup.reduce((a,s)=>a+s.hpc,0),ce=d.sup.reduce((a,s)=>a+s.eletr,0),co=d.sup.reduce((a,s)=>a+s.ol,0);
+ mk('g_comp',{type:'doughnut',data:{labels:['Farma','Promoções','HPC','Eletrônico','OL'],datasets:[{data:[cf,cp,ch,ce,co],backgroundColor:[AZUL,AZUL2,VERDE,AMARELO,ROXO]}]},options:{plugins:{datalabels:dlDonut,legend:{position:'right'},tooltip:{callbacks:{label:c=>c.label+': R$ '+fmtBRL(c.parsed)}}}}});
+}
+
+/* ===== SUPERVISORES ===== */
+function renderSup(){
+ const d=D(),S=d.sup;
+ const sum=k=>S.reduce((a,s)=>a+s[k],0);
+ const total=sum('total'),tf=sum('tf'),ol=sum('ol'),vend=d.supTotPct&&d.supTotPct.vend!=null?d.supTotPct.vend:sum('vend');
+ document.getElementById('supLead').innerHTML=`Regional <b>${d.nome} · ${d.regiao}</b>. ${S.length} supervisores${d.supTotPct&&d.supTotPct.vend!=null?', '+vend+' vendedores':''}.`;
+ document.getElementById('supAviso').innerHTML=d.supNota?`<div class="aviso">⚠ ${d.supNota}</div>`:'';
+ const rentM=d.supTotPct?d.supTotPct.rent:S.reduce((a,s)=>a+s.rent,0)/S.length;
+ const posiM=d.supTotPct?d.supTotPct.posi:S.reduce((a,s)=>a+s.posi,0)/S.length;
+ const inadM=d.supTotPct?d.supTotPct.inad:S.reduce((a,s)=>a+s.inad,0)/S.length;
+ document.getElementById('kpiSup').innerHTML=`
+  <div class="kpi"><div class="label">Total Realizado</div><div class="value">${fmtMi(total)}</div><div class="foot">Farma + OL${d.supNota?' (8 sup.)':''}</div></div>
+  <div class="kpi green"><div class="label">Total Farma</div><div class="value green">${fmtMi(tf)}</div></div>
+  <div class="kpi"><div class="label">Total OL</div><div class="value">${fmtMi(ol)}</div></div>
+  <div class="kpi"><div class="label">Rentabilidade ${d.supTotPct?'':'(média)'}</div><div class="value">${pct(rentM)}</div></div>
+  <div class="kpi amber"><div class="label">Positivação ${d.supTotPct?'':'(média)'}</div><div class="value">${pct(posiM)}</div></div>
+  <div class="kpi green"><div class="label">Inadimplência ${d.supTotPct?'':'(média)'}</div><div class="value green">${pct(inadM)}</div></div>`;
+ mk('g_suptotal',{type:'bar',data:{labels:S.map(s=>s.n),datasets:[{label:'Total Farma',data:S.map(s=>s.tf),backgroundColor:AZUL,borderRadius:4,stack:'s',datalabels:dlStack},{label:'OL',data:S.map(s=>s.ol),backgroundColor:ROXO,borderRadius:4,stack:'s',datalabels:dlStack}]},options:{indexAxis:'y',scales:{x:{stacked:true,ticks:{callback:x=>fmtMi(x)}},y:{stacked:true}},plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': R$ '+fmtBRL(c.parsed.x)}}}}});
+ mk('g_supproj',{type:'bar',data:{labels:S.map(s=>s.n),datasets:[{label:'%Proj Cota',data:S.map(s=>s.proj),backgroundColor:S.map(s=>s.proj>=100?VERDE:(s.proj>=95?AMARELO:VERMELHO)),borderRadius:4,datalabels:Object.assign({},dlPctVal,{align:'top'})}]},options:{scales:{y:{ticks:{callback:x=>x+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}}}});
+ mk('g_supcomp',{type:'bar',data:{labels:S.map(s=>s.n),datasets:[{label:'Farma',data:S.map(s=>s.farma),backgroundColor:AZUL,stack:'a'},{label:'Promoções',data:S.map(s=>s.promo),backgroundColor:AZUL2,stack:'a'},{label:'HPC',data:S.map(s=>s.hpc),backgroundColor:VERDE,stack:'a'},{label:'Eletrônico',data:S.map(s=>s.eletr),backgroundColor:AMARELO,stack:'a'},{label:'OL',data:S.map(s=>s.ol),backgroundColor:ROXO,stack:'a'}]},options:{scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:x=>fmtMi(x)}}},plugins:{datalabels:dlStack,tooltip:{callbacks:{label:c=>c.dataset.label+': R$ '+fmtBRL(c.parsed.y)}}}}});
+ mk('g_supind',{type:'bar',data:{labels:S.map(s=>s.n),datasets:[{label:'% Rent',data:S.map(s=>s.rent),backgroundColor:AZUL,borderRadius:3},{label:'% Posi',data:S.map(s=>s.posi),backgroundColor:VERDE,borderRadius:3},{label:'% Inad',data:S.map(s=>s.inad),backgroundColor:VERMELHO,borderRadius:3}]},options:{scales:{y:{ticks:{callback:x=>x+'%'}}},plugins:{datalabels:Object.assign({},dlPctVal,{align:'top',font:{weight:'700',size:8}})}}});
+ const tb=document.querySelector('#supTable tbody');tb.innerHTML='';
+ S.forEach(s=>{tb.innerHTML+=`<tr><td>${s.n}</td><td>${s.vend||'—'}</td><td>${fmtBRL(s.cota)}</td><td>${fmtBRL(s.farma)}</td><td>${fmtBRL(s.promo)}</td><td>${fmtBRL(s.hpc)}</td><td>${fmtBRL(s.eletr)}</td><td>${fmtBRL(s.tf)}</td><td>${pct(s.proj)}</td><td>${fmtBRL(s.ol)}</td><td>${fmtBRL(s.total)}</td><td>${pct(s.rent)}</td><td>${pct(s.inad)}</td><td>${pct(s.posi)}</td><td>${s.prazo.toLocaleString('pt-BR')}</td></tr>`;});
+ const P=d.supTotPct;
+ tb.innerHTML+=`<tr class="total"><td>TOTAL${d.supNota?' (8 sup.)':''}</td><td>${vend||'—'}</td><td>${fmtBRL(sum('cota'))}</td><td>${fmtBRL(sum('farma'))}</td><td>${fmtBRL(sum('promo'))}</td><td>${fmtBRL(sum('hpc'))}</td><td>${fmtBRL(sum('eletr'))}</td><td>${fmtBRL(tf)}</td><td>—</td><td>${fmtBRL(ol)}</td><td>${fmtBRL(total)}</td><td>${P?pct(P.rent):'—'}</td><td>${P?pct(P.inad):'—'}</td><td>${P?pct(P.posi):'—'}</td><td>${P?P.prazo.toLocaleString('pt-BR'):'—'}</td></tr>`;
+}
+
+/* ===== GERENTE ===== */
+function renderGer(){
+ const d=D(),g=d.ger;
+ document.getElementById('gerTitle').textContent=`Scorecard do Gerente — ${d.nome} (${d.regiao})`;
+ document.getElementById('gerLead').innerHTML=`Placar total <b>${g.placar}</b> pontos · Score/Nível <b>${g.nivel}</b> · Performance <b>${pct(g.perf)}</b>.`;
+ document.getElementById('kpiGer').innerHTML=`
+  <div class="kpi"><div class="label">Placar Total</div><div class="value">${g.placar.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+  <div class="kpi green"><div class="label">Performance</div><div class="value green">${pct(g.perf)}</div></div>
+  <div class="kpi"><div class="label">Pontos</div><div class="value">${g.tot.pt.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
+  <div class="kpi"><div class="label">Score / Nível</div><div class="value">${g.nivel}</div></div>`;
+ mk('g_gerpct',{type:'bar',data:{labels:g.rows.map(r=>r.i),datasets:[{label:'% Atingimento',data:g.rows.map(r=>r.pct),backgroundColor:g.rows.map(r=>r.pct>=100?VERDE:(r.pct>=70?AMARELO:VERMELHO)),borderRadius:4,datalabels:dlPctVal}]},options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>x+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x+'%'}}}}});
+ mk('g_gerplacar',{type:'bar',data:{labels:g.rows.map(r=>r.i),datasets:[{label:'Placar',data:g.rows.map(r=>r.pl),backgroundColor:AZUL,borderRadius:4,datalabels:dlNum}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});
+ const tb=document.querySelector('#gerTable tbody');tb.innerHTML='';
+ g.rows.forEach(r=>{tb.innerHTML+=`<tr><td>${r.i}</td><td>${fmtBRL(r.meta)}</td><td>${fmtBRL(r.at)}</td><td class="${r.pct>=100?'pos':(r.pct<70?'neg':'')}">${pct(r.pct)}</td><td>${r.pt.toLocaleString('pt-BR')}</td><td>${r.pe.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td>${r.pl.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;});
+ tb.innerHTML+=`<tr class="total"><td>TOTAL</td><td>${fmtBRL(g.tot.meta)}</td><td>${fmtBRL(g.tot.at)}</td><td>${pct(g.tot.pct)}</td><td>${g.tot.pt.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td>${g.tot.pe.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td>${g.tot.pl.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
+}
+
+/* ===== HPC ===== */
+function renderHpc(){
+ const d=D(),h=d.hpc;
+ document.getElementById('hpcLead').innerHTML=`Share do HPC no total. Valor NF HPC ${compactBRL(h.hNF)} de ${compactBRL(h.tNF)} total (share ${pct(h.sNF)}). Positivação HPC = ${pct(h.sPos)} da positivação total.`;
+ document.getElementById('kpiHpc').innerHTML=`
+  <div class="kpi"><div class="label">Valor NF HPC</div><div class="value">${compactBRL(h.hNF)}</div><div class="foot">de ${compactBRL(h.tNF)} total</div></div>
+  <div class="kpi ${h.hMg>=0?'green':'red'}"><div class="label">Margem HPC</div><div class="value ${h.hMg>=0?'green':'red'}">${pct(h.hMg)}</div><div class="foot">total geral: ${pct(h.tMg)}</div></div>
+  <div class="kpi"><div class="label">Positivação HPC</div><div class="value">${h.hPos.toLocaleString('pt-BR')}</div></div>
+  <div class="kpi amber"><div class="label">Share NF</div><div class="value">${pct(h.sNF)}</div></div>
+  <div class="kpi amber"><div class="label">Share Positivação</div><div class="value">${pct(h.sPos)}</div></div>
+  <div class="kpi"><div class="label">Prazo Médio HPC</div><div class="value">${h.hPz.toLocaleString('pt-BR')}</div></div>`;
+ mk('g_hpceq',{type:'bar',data:{labels:h.eq.map(e=>e.s),datasets:[{label:'Valor NF (R$)',data:h.eq.map(e=>e.nf),backgroundColor:PALETA,borderRadius:4,datalabels:dlMoney}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'R$ '+fmtBRL(c.parsed.x)}}}}});
+ mk('g_hpcmarca',{type:'bar',data:{labels:h.mc.map(m=>m.m),datasets:[{label:'Valor NF (R$)',data:h.mc.map(m=>m.nf),backgroundColor:AZUL,borderRadius:4,datalabels:dlMoney}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'R$ '+fmtBRL(c.parsed.x)}}}}});
+ mk('g_hpcpos',{type:'bar',data:{labels:h.mc.map(m=>m.m),datasets:[{label:'Positivação',data:h.mc.map(m=>m.pos),backgroundColor:VERDE,borderRadius:4,datalabels:dlNum}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'POS: '+c.parsed.x.toLocaleString('pt-BR')}}}}});
+}
+
+/* ===== CAMPANHAS ===== */
+function renderCamp(){
+ const d=D(),C=d.camp;
+ const mt=C.reduce((a,c)=>a+c.meta,0),vt=C.reduce((a,c)=>a+c.venda,0),at=vt/mt*100;
+ document.getElementById('campLead').innerHTML=`Meta total R$ ${fmtBRL(mt)} · Venda R$ ${fmtBRL(vt)} · <b>${pct(at)}</b> de atingimento · Diferença ${fmtBRL(vt-mt)}.`;
+ document.getElementById('kpiCamp').innerHTML=`
+  <div class="kpi"><div class="label">Meta Total</div><div class="value">${fmtMi(mt)}</div></div>
+  <div class="kpi"><div class="label">Venda Total</div><div class="value">${compactBRL(vt)}</div></div>
+  <div class="kpi ${at>=100?'green':'red'}"><div class="label">% Atingido</div><div class="value ${at>=100?'green':'red'}">${pct(at)}</div></div>
+  <div class="kpi ${vt-mt>=0?'green':'red'}"><div class="label">Diferença</div><div class="value ${vt-mt>=0?'green':'red'}">${compactBRL(vt-mt)}</div></div>`;
+ mk('g_campmeta',{type:'bar',data:{labels:C.map(c=>c.n),datasets:[{label:'Meta',data:C.map(c=>c.meta),backgroundColor:CINZA,borderRadius:4},{label:'Venda',data:C.map(c=>c.venda),backgroundColor:AZUL,borderRadius:4,datalabels:Object.assign({},dlMoneyPlain,{align:'top'})}]},options:{scales:{y:{ticks:{callback:x=>fmtBRL(x)}}},plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': R$ '+fmtBRL(c.parsed.y)}}}}});
+ mk('g_camppct',{type:'bar',data:{labels:C.map(c=>c.n),datasets:[{label:'% Atingido',data:C.map(c=>c.pct),backgroundColor:C.map(c=>c.pct>=100?VERDE:(c.pct>=75?AMARELO:VERMELHO)),borderRadius:4,datalabels:dlPctVal}]},options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>x+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x+'%'}}}}});
+ const tb=document.querySelector('#campTable tbody');tb.innerHTML='';
+ C.forEach(c=>{tb.innerHTML+=`<tr><td>${c.n}</td><td>${fmtBRL(c.meta)}</td><td>${fmtBRL(c.venda)}</td><td class="${c.pct>=100?'pos':(c.pct<75?'neg':'')}">${pct(c.pct)}</td><td class="${cls(c.dif)}">${fmtBRL(c.dif)}</td></tr>`;});
+ tb.innerHTML+=`<tr class="total"><td>TOTAL</td><td>${fmtBRL(mt)}</td><td>${fmtBRL(vt)}</td><td class="${at>=100?'pos':'neg'}">${pct(at)}</td><td class="${cls(vt-mt)}">${fmtBRL(vt-mt)}</td></tr>`;
+}
+
+/* ===== CANAIS ===== */
+function renderCanais(){
+ const d=D();
+ document.getElementById('canaisLead').innerHTML=`Canais de pedido eletrônico por supervisor — <b>${d.nome}</b>. WEB total R$ ${fmtBRL(d.webTot.vd)} · B2List total R$ ${fmtBRL(d.b2Tot.vd)}.`;
+ const arr=canalMode==='b2'?d.b2:d.web, tot=canalMode==='b2'?d.b2Tot:d.webTot, nome=canalMode==='b2'?'B2List':'WEB', cor=canalMode==='b2'?AMARELO:AZUL;
+ document.getElementById('kpiCanal').innerHTML=`
+  <div class="kpi ${canalMode==='b2'?'amber':''}"><div class="label">${nome} — VD NF</div><div class="value">${compactBRL(tot.vd)}</div><div class="foot">Margem ${pct(tot.mg)}</div></div>
+  <div class="kpi ${canalMode==='b2'?'amber':''}"><div class="label">${nome} — Positivação</div><div class="value">${tot.pos}</div><div class="foot">${pct(tot.pp)} da carteira</div></div>
+  <div class="kpi ${canalMode==='b2'?'amber':''}"><div class="label">${nome} — Ticket Médio</div><div class="value">${fmtBRL(tot.tkt)}</div><div class="foot">VMD R$ ${fmtBRL(tot.vmd)}</div></div>`;
+ mk('g_canalvd',{type:'bar',data:{labels:arr.map(x=>x.s),datasets:[{label:'VD NF',data:arr.map(x=>x.vd),backgroundColor:cor,borderRadius:4,datalabels:dlMoney}]},options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>fmtBRL(x)}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'R$ '+fmtBRL(c.parsed.x)}}}}});
+ mk('g_canalpos',{type:'bar',data:{labels:arr.map(x=>x.s),datasets:[{label:'% POS',data:arr.map(x=>x.pp),backgroundColor:VERDE,borderRadius:4,datalabels:Object.assign({},dlPctVal,{align:'top'})}]},options:{scales:{y:{ticks:{callback:x=>x+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+'%'}}}}});
+ document.getElementById('canalLabel').textContent=nome;
+ const tb=document.querySelector('#canalTable tbody');tb.innerHTML='';
+ arr.forEach(x=>{tb.innerHTML+=`<tr><td>${x.s}</td><td>${fmtBRL(x.vd)}</td><td>${pct(x.mg)}</td><td>${x.cart}</td><td>${x.pos}</td><td>${pct(x.pp)}</td><td>${fmtBRL(x.tkt)}</td><td>${fmtBRL(x.vmd)}</td></tr>`;});
+ tb.innerHTML+=`<tr class="total"><td>TOTAL</td><td>${fmtBRL(tot.vd)}</td><td>${pct(tot.mg)}</td><td>${tot.cart}</td><td>${tot.pos}</td><td>${pct(tot.pp)}</td><td>${fmtBRL(tot.tkt)}</td><td>${fmtBRL(tot.vmd)}</td></tr>`;
+}
+
+/* ===== MENSAL ===== */
+function renderMensal(){
+ const d=D(),ds=olMode==='sem'?d.sem:d.com, lbl=olMode==='sem'?'Sem OL':'Com OL';
+ const pc=ds.posCart||ds.pos.map(p=>d.cartTot?p/d.cartTot*100:0);
+ const tpc=(ds.total.posCart!=null)?ds.total.posCart:(d.cartTot?ds.total.pos/d.cartTot*100:0);
+ const hasMg=Array.isArray(ds.mg)&&ds.mg.some(x=>x!=null);
+ const upd=(id,type,datasets,extra)=>mk(id,{type,data:{labels:meses,datasets},options:Object.assign({},extra)});
+ upd('g_vdnf','bar',[{label:lbl,data:ds.vdnf,backgroundColor:AZUL,borderRadius:4,datalabels:dlMoney}],{scales:{y:{ticks:{callback:x=>(x/1e6).toFixed(1)+'M'}}},plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': R$ '+fmtBRL(c.parsed.y)}}}});
+ const mgWrap=document.getElementById('mgWrap'),mgNote=document.getElementById('mgNote');
+ if(hasMg){mgWrap.style.display='';mgNote.style.display='none';
+  upd('g_mg','line',[{label:lbl,data:ds.mg,borderColor:VERDE,backgroundColor:'rgba(58,167,87,.12)',tension:.3,fill:true,datalabels:Object.assign({},dlPctVal,{align:'top'})}],{scales:{y:{ticks:{callback:x=>x+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>pct(c.parsed.y)}}}});
+ }else{if(charts['g_mg']){charts['g_mg'].destroy();delete charts['g_mg'];}mgWrap.style.display='none';mgNote.style.display='';mgNote.innerHTML='Margem % mensal não disponível na base desta regional — as tabelas mensais (Com/Sem OL) enviadas não trazem essa coluna. A margem consolidada está na aba <b>HPC / Consumo</b> (margem total e do HPC) e por supervisor na aba <b>Supervisores</b>.';}
+ upd('g_pos','bar',[{type:'bar',label:'POS',data:ds.pos,backgroundColor:AZUL2,borderRadius:4,yAxisID:'y',datalabels:{display:true,color:'#1f2a37',font:DLF,anchor:'end',align:'top',formatter:x=>x.toLocaleString('pt-BR')}},{type:'line',label:'% POS x Cart',data:pc,borderColor:VERMELHO,backgroundColor:VERMELHO,tension:.3,yAxisID:'y1',datalabels:{display:true,color:VERMELHO,font:DLF,anchor:'end',align:'bottom',formatter:x=>pct(x)}}],{scales:{y:{position:'left'},y1:{position:'right',ticks:{callback:x=>x+'%'},grid:{drawOnChartArea:false}}}});
+ document.getElementById('tblLabel').textContent=lbl+(hasMg?'':' — margem mensal não disponível na fonte');
+ const tb=document.querySelector('#mensalTable tbody');tb.innerHTML='';
+ meses.forEach((m,i)=>{tb.innerHTML+=`<tr><td>${m}</td><td>${fmtBRL(ds.vdnf[i])}</td><td>${d.cartTot}</td><td>${ds.pos[i]}</td><td>${pct(pc[i])}</td><td>${ds.sku[i]}</td><td>${fmtBRL(ds.qtd[i])}</td><td class="${cls(ds.varMes[i])}">${pct(ds.varMes[i])}</td><td class="${cls(ds.varAno[i])}">${pct(ds.varAno[i])}</td><td>${fmtBRL(ds.vmd[i])}</td><td>${hasMg?pct(ds.mg[i]):'—'}</td></tr>`;});
+ const t=ds.total;
+ tb.innerHTML+=`<tr class="total"><td>TOTAL</td><td>${fmtBRL(t.vdnf)}</td><td>${d.cartTot}</td><td>${t.pos}</td><td>${pct(tpc)}</td><td>${t.sku}</td><td>${fmtBRL(t.qtd)}</td><td class="${cls(t.varMes)}">${pct(t.varMes)}</td><td class="${cls(t.varAno)}">${pct(t.varAno)}</td><td>${fmtBRL(t.vmd)}</td><td>${(t.mg!=null)?pct(t.mg):'—'}</td></tr>`;
+}
+
+/* ===== MARCAS ===== */
+function renderMarcas(){
+ const d=D();
+ if(!d.mkMetas||!d.mkMetas.length){
+  document.getElementById('mkResumo').innerHTML=`<b>${d.nome}</b> — aguardando a planilha de metas por marca. Cole os dados no chat (como feito para as outras regionais) e eu preencho esta aba.`;
+  document.getElementById('mkKpis').innerHTML='';
+  ['g_mkTop','g_mkFaixa','g_mkGap','g_mkTopPct'].forEach(id=>{if(charts[id]){charts[id].destroy();delete charts[id];}});
+  document.querySelector('#mkTable tbody').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--txt2);padding:20px">Sem dados de metas por marca para esta regional.</td></tr>';
+  return;
+ }
+ const data=d.mkMetas.map(m=>({...m,nfv:(m.nf==null?0:m.nf),gap:(m.nf==null?0:m.nf)-m.meta}));
+ const metaTot=d.mkMetas.reduce((a,m)=>a+m.meta,0), realTot=data.reduce((a,m)=>a+m.nfv,0);
+ const semTot=d.mkSem.reduce((a,m)=>a+m.nf,0), vendaTot=realTot+semTot, ating=vendaTot/metaTot*100;
+ const acima=data.filter(m=>m.nfv>=m.meta).length, abaixo=data.length-acima;
+ document.getElementById('mkResumo').innerHTML=`<b>${d.nome}</b> · Venda total das marcas: R$ ${fmtBRL(vendaTot)} (${d.mkMetas.length} com meta + ${d.mkSem.length} com venda sem meta).`;
+ document.getElementById('mkKpis').innerHTML=`
+  <div class="kpi"><div class="label">Venda Total (todas marcas)</div><div class="value">${fmtMi(vendaTot)}</div><div class="foot">R$ ${fmtBRL(vendaTot)}</div></div>
+  <div class="kpi"><div class="label">Meta Total (marcas c/ meta)</div><div class="value">${fmtMi(metaTot)}</div><div class="foot">R$ ${fmtBRL(metaTot)}</div></div>
+  <div class="kpi ${ating>=100?'green':(ating>=85?'amber':'red')}"><div class="label">Realizado — marcas c/ meta</div><div class="value ${ating>=100?'green':(ating<85?'red':'')}">${fmtMi(realTot)}</div><div class="foot">R$ ${fmtBRL(realTot)}</div></div>
+  <div class="kpi ${ating>=100?'green':(ating>=85?'amber':'red')}"><div class="label">% Atingido Global</div><div class="value ${ating>=100?'green':(ating<85?'red':'')}">${pct(ating)}</div><div class="foot">venda total ÷ meta</div></div>
+  <div class="kpi"><div class="label">Venda sem meta</div><div class="value">${fmtBRL(semTot)}</div><div class="foot">${d.mkSem.length} marcas</div></div>
+  <div class="kpi green"><div class="label">Marcas ≥ 100%</div><div class="value green">${acima}</div><div class="foot">de ${data.length} com meta</div></div>
+  <div class="kpi red"><div class="label">Marcas &lt; 100%</div><div class="value red">${abaixo}</div><div class="foot">de ${data.length} com meta</div></div>`;
+ const top15=data.slice().sort((a,b)=>b.meta-a.meta).slice(0,15);
+ mk('g_mkTop',{type:'bar',data:{labels:top15.map(m=>m.n),datasets:[{label:'Meta',data:top15.map(m=>m.meta),backgroundColor:CINZA,borderRadius:3,datalabels:{display:false}},{label:'Realizado',data:top15.map(m=>m.nfv),backgroundColor:top15.map(m=>m.nfv>=m.meta?VERDE:AZUL),borderRadius:3,datalabels:Object.assign({},dlMoneyPlain,{font:{weight:'700',size:8}})}]},options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>fmtMi(x)}}},plugins:{legend:{labels:{generateLabels:ch=>[{text:'Meta',fillStyle:CINZA,strokeStyle:CINZA,lineWidth:0,hidden:!ch.isDatasetVisible(0),datasetIndex:0},{text:'Realizado ≥ meta',fillStyle:VERDE,strokeStyle:VERDE,lineWidth:0,hidden:!ch.isDatasetVisible(1),datasetIndex:1},{text:'Realizado < meta',fillStyle:AZUL,strokeStyle:AZUL,lineWidth:0,hidden:!ch.isDatasetVisible(1),datasetIndex:1}]}},tooltip:{callbacks:{label:c=>c.dataset.label+': R$ '+fmtBRL(c.parsed.x)}}}}});
+ const faixas=[{l:'< 50%',c:VERMELHO,t:p=>p<50},{l:'50–75%',c:'#e8743c',t:p=>p>=50&&p<75},{l:'75–100%',c:AMARELO,t:p=>p>=75&&p<100},{l:'100–150%',c:VERDE,t:p=>p>=100&&p<150},{l:'> 150%',c:'#2e8a48',t:p=>p>=150}];
+ mk('g_mkFaixa',{type:'doughnut',data:{labels:faixas.map(f=>f.l),datasets:[{data:faixas.map(f=>data.filter(m=>f.t(m.pct)).length),backgroundColor:faixas.map(f=>f.c)}]},options:{plugins:{legend:{position:'right'},datalabels:{display:true,color:'#fff',font:{weight:'700',size:11},formatter:(v,c)=>v?[v+'',shareOf(v,c).toFixed(0)+'%']:''},tooltip:{callbacks:{label:c=>c.label+': '+c.parsed+' marcas'}}},cutout:'55%'}});
+ const gap=data.filter(m=>m.gap<0).sort((a,b)=>a.gap-b.gap).slice(0,12);
+ mk('g_mkGap',{type:'bar',data:{labels:gap.map(m=>m.n),datasets:[{label:'Falta p/ meta',data:gap.map(m=>Math.abs(m.gap)),backgroundColor:VERMELHO,borderRadius:3,datalabels:Object.assign({},dlMoneyPlain,{color:'#fff',anchor:'center',align:'center',font:{weight:'700',size:8}})}]},options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>fmtMi(x)}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Falta R$ '+fmtBRL(c.parsed.x)}}}}});
+ const topPct=data.filter(m=>m.nf!=null).sort((a,b)=>b.pct-a.pct).slice(0,12);
+ mk('g_mkTopPct',{type:'bar',data:{labels:topPct.map(m=>m.n),datasets:[{label:'% Atingido',data:topPct.map(m=>m.pct),backgroundColor:VERDE,borderRadius:3,datalabels:dlPctVal}]},options:{indexAxis:'y',scales:{x:{ticks:{callback:x=>x+'%'}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>pct(c.parsed.x)}}}}});
+ buildMkTable(data);
+}
+function buildMkTable(data){
+ const d=D(),q=(document.getElementById('mkSearch').value||'').toUpperCase();
+ const tb=document.querySelector('#mkTable tbody');tb.innerHTML='';
+ if(mkFilterMode==='semmeta'){
+  const arr=d.mkSem.filter(m=>m.n.toUpperCase().includes(q));
+  tb.innerHTML=arr.map(m=>`<tr><td>${m.n}</td><td>—</td><td>${fmtBRL(m.nf)}</td><td>—</td><td>—</td><td>${m.pr!=null?fmtBRL(m.pr):'—'}</td><td>—</td></tr>`).join('');
+  tb.innerHTML+=`<tr class="total"><td>TOTAL</td><td>—</td><td>${fmtBRL(arr.reduce((a,m)=>a+m.nf,0))}</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;return;
+ }
+ let arr=data.slice();
+ if(mkFilterMode==='acima')arr=arr.filter(m=>m.nf!=null&&m.nf>=m.meta);
+ if(mkFilterMode==='abaixo')arr=arr.filter(m=>m.nf==null||m.nf<m.meta);
+ arr=arr.filter(m=>m.n.toUpperCase().includes(q)).sort((a,b)=>b.meta-a.meta);
+ arr.forEach(m=>{const semNf=m.nf==null;tb.innerHTML+=`<tr><td>${m.n}</td><td>${fmtBRL(m.meta)}</td><td>${semNf?'—':fmtBRL(m.nf)}</td><td class="${semNf?'neg':(m.pct>=100?'pos':(m.pct<75?'neg':''))}">${semNf?'0,00%':pct(m.pct)}</td><td>${semNf?'—':pct(m.p)}</td><td>${semNf?'—':fmtBRL(m.pr)}</td><td class="${m.gap<0?'neg':'pos'}">${fmtBRL(m.gap)}</td></tr>`;});
+ const mt=arr.reduce((a,m)=>a+m.meta,0),rt=arr.reduce((a,m)=>a+m.nfv,0),prt=arr.reduce((a,m)=>a+(m.pr||0),0);
+ tb.innerHTML+=`<tr class="total"><td>TOTAL (${arr.length})</td><td>${fmtBRL(mt)}</td><td>${fmtBRL(rt)}</td><td>${mt?pct(rt/mt*100):'—'}</td><td>—</td><td>${fmtBRL(prt)}</td><td class="${(rt-mt)<0?'neg':'pos'}">${fmtBRL(rt-mt)}</td></tr>`;
+}
+
+/* ===== RENDER GERAL ===== */
+function renderAll(){renderVisao();renderSup();renderGer();renderHpc();renderCamp();renderCanais();renderMarcas();renderMensal();setTimeout(()=>Object.values(charts).forEach(c=>{try{c.resize();}catch(e){}}),60);}
+
+/* ===== CAPA ===== */
+document.getElementById('coverBtn').onclick=()=>{selectMgr('lucilene');document.getElementById('cover').classList.add('hide');setTimeout(()=>Object.values(charts).forEach(c=>{try{c.resize();}catch(e){}}),650);};
+document.getElementById('homeBtn').onclick=()=>document.getElementById('cover').classList.remove('hide');
+
+/* ===== GERENTE (seletor) ===== */
+const mgrNames={lucilene:'LUCILENE',rosa:'ROSA',mauro:'MAURO',alberto:'ALBERTO'};
+function selectMgr(m){
+ document.querySelectorAll('#mgrBar button').forEach(b=>b.classList.toggle('active',b.dataset.mgr===m));
+ document.getElementById('mgrLabel').textContent=mgrNames[m];
+ const has=!!DADOS[m];
+ document.getElementById('tabs').style.display=has?'':'none';
+ document.getElementById('mainContent').style.display=has?'':'none';
+ document.getElementById('mgrPlaceholder').style.display=has?'none':'';
+ if(has){cur=m;renderAll();}else{document.getElementById('phName').textContent=mgrNames[m];}
+}
+document.querySelectorAll('#mgrBar button').forEach(b=>b.onclick=()=>selectMgr(b.dataset.mgr));
+
+/* ===== TABS / TOGGLES ===== */
+document.querySelectorAll('#tabs button').forEach(b=>{b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');setTimeout(()=>Object.values(charts).forEach(c=>{try{c.resize();}catch(e){}}),60);};});
+document.querySelectorAll('#olToggle button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#olToggle button').forEach(x=>x.classList.remove('active'));b.classList.add('active');olMode=b.dataset.ol;renderMensal();});
+document.querySelectorAll('#canalToggle button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#canalToggle button').forEach(x=>x.classList.remove('active'));b.classList.add('active');canalMode=b.dataset.canal;renderCanais();});
+document.querySelectorAll('#mkFilter button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#mkFilter button').forEach(x=>x.classList.remove('active'));b.classList.add('active');mkFilterMode=b.dataset.f;renderMarcas();});
+document.getElementById('mkSearch').addEventListener('input',()=>renderMarcas());
+
+/* ===== INIT ===== */
+renderAll();
+</script>
+</body>
+</html>
