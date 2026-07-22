@@ -134,6 +134,8 @@
   <button data-mgr="rosa">ROSA</button>
   <button data-mgr="mauro">MAURO</button>
   <button data-mgr="alberto">ALBERTO</button>
+  <span class="mgr-title" style="margin-left:6px">Projeção</span>
+  <button data-mgr="projecao" style="background:#0e3a5f;color:#fff;border-color:#0e3a5f">📅 PROJEÇÃO MÊS</button>
 </div>
 
 <div class="tabs" id="tabs">
@@ -145,7 +147,6 @@
   <button data-tab="canais">WEB & B2List</button>
   <button data-tab="marcas">Marcas</button>
   <button data-tab="mensal">Evolução Mensal</button>
-  <button data-tab="julho">Julho</button>
 </div>
 
 <main id="mainContent">
@@ -294,8 +295,11 @@
   </section>
 
   <section class="panel" id="julho">
-    <h2 class="section">Julho/2026 — Análise Estoque × Meta</h2>
-    <p class="lead">Acompanhamento de julho por gerente e recorte (filial × Farma/HPC). Os KPIs mostram meta, realizado e a cobertura pelo estoque disponível; a tabela destaca as <b>marcas em risco</b> — aquelas cujo estoque não cobre a meta do mês mesmo com toda a possibilidade de venda.</p>
+    <h2 class="section">Projeção do Mês — Julho/2026 (Estoque × Meta)</h2>
+    <div style="background:#eaf2fb;border:1px solid #b9d4f0;border-left:4px solid var(--azul);border-radius:8px;padding:12px 16px;margin:6px 0 16px;font-size:13px;color:#173a5e">
+      📅 <b>Referente ao mês de julho/2026</b>, que tem <b>23 dias úteis</b>: já se passaram <b>15 dias</b> e restam <b>8 dias úteis</b>. A <b>% Projeção</b> estima o atingimento ao fim do mês mantendo o ritmo atual (realizado ÷ dias decorridos × dias totais).
+    </div>
+    <p class="lead">Acompanhamento por gerente e recorte (filial × Farma/HPC). Os KPIs mostram meta, realizado e a cobertura pelo estoque disponível; a tabela destaca as <b>marcas em risco</b> — aquelas cujo estoque não cobre a meta do mês mesmo com toda a possibilidade de venda.</p>
     <div class="toggle-row" id="julGer">
       <button class="active" data-jg="lucilene">LUCILENE</button>
       <button data-jg="rosa">ROSA</button>
@@ -304,6 +308,10 @@
     </div>
     <div class="toggle-row" id="julRec"></div>
     <div class="kpi-grid" id="julKpis"></div>
+    <div class="card" style="padding:14px 16px">
+      <h3 style="margin-bottom:10px">Resumo das marcas (com meta no mês)</h3>
+      <div class="kpi-grid" id="julResumo" style="margin-bottom:0"></div>
+    </div>
     <div class="card">
       <h3 id="julRiscoTitle">Marcas em risco — estoque insuficiente para a meta</h3>
       <div class="table-scroll"><table id="julRisco">
@@ -314,7 +322,7 @@
     <div class="card">
       <h3 id="julFullTitle">Todas as marcas — meta, realizado e cobertura por estoque</h3>
       <div class="table-scroll" style="max-height:620px;overflow-y:auto"><table id="julFull">
-        <thead><tr><th>Marca</th><th>Meta</th><th>Realizado (NF)</th><th>% Atingido</th><th>Valor Estoque</th><th>Possib. Venda</th><th>Situação</th></tr></thead><tbody></tbody>
+        <thead><tr><th>Marca</th><th>Meta</th><th>Total NF</th><th>% Atingido</th><th>% Projeção</th><th>Valor Estoque</th><th>Possib. Venda</th><th>Meta atingível?</th></tr></thead><tbody></tbody>
       </table></div>
       <p class="note">Ordenado por meta (maior → menor). <span class="pos">Verde</span> = projeção já atinge a meta; <b>Estoque cobre</b> = meta atingível com o estoque disponível; <span class="neg">Insuficiente</span> = estoque não cobre a meta. Marcas com meta zero e sem faturamento foram omitidas.</p>
     </div>
@@ -782,10 +790,19 @@ document.getElementById('coverBtn').onclick=()=>{selectMgr('empresa');document.g
 document.getElementById('homeBtn').onclick=()=>document.getElementById('cover').classList.remove('hide');
 
 /* ===== GERENTE (seletor) ===== */
-const mgrNames={empresa:'EMPRESA',lucilene:'LUCILENE',rosa:'ROSA',mauro:'MAURO',alberto:'ALBERTO'};
+const mgrNames={empresa:'EMPRESA',lucilene:'LUCILENE',rosa:'ROSA',mauro:'MAURO',alberto:'ALBERTO',projecao:'PROJEÇÃO MÊS'};
 function selectMgr(m){
  document.querySelectorAll('#mgrBar button').forEach(b=>b.classList.toggle('active',b.dataset.mgr===m));
  document.getElementById('mgrLabel').textContent=mgrNames[m];
+ if(m==='projecao'){
+   document.getElementById('mainContent').style.display='';
+   document.getElementById('mgrPlaceholder').style.display='none';
+   document.getElementById('tabs').style.display='none';
+   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+   document.getElementById('julho').classList.add('active');
+   buildJulRec(); renderJulho();
+   return;
+ }
  const has=!!DADOS[m];
  document.getElementById('tabs').style.display=has?'':'none';
  document.getElementById('mainContent').style.display=has?'':'none';
@@ -793,6 +810,12 @@ function selectMgr(m){
  if(has){
    cur=m;
    const emp=(m==='empresa');
+   if(document.getElementById('julho').classList.contains('active')){
+     document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active'));
+     document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+     document.querySelector('#tabs button[data-tab="visao"]').classList.add('active');
+     document.getElementById('visao').classList.add('active');
+   }
    const supBtn=document.querySelector('#tabs button[data-tab="sup"]');
    const gerBtn=document.querySelector('#tabs button[data-tab="gerente"]');
    if(supBtn)supBtn.textContent=emp?'Gerentes':'Supervisores';
@@ -875,6 +898,17 @@ function renderJulho(){
   <div class="kpi"><div class="label">Valor em estoque</div><div class="value">${compactBRL(est)}</div><div class="foot">R$ ${fmtBRL(est)}</div></div>
   <div class="kpi ${cobP>=100?'green':'amber'}"><div class="label">Possibilidade de venda</div><div class="value">${compactBRL(poss)}</div><div class="foot">${pct(cobP)} da meta em estoque</div></div>
   <div class="kpi ${risco>0?'red':'green'}"><div class="label">Marcas em risco</div><div class="value ${risco>0?'red':'green'}">${risco}</div><div class="foot">estoque não cobre a meta</div></div>`;
+ /* resumo de contagem de marcas com meta */
+ const fd=(typeof JULM!=='undefined')?(JULM[julGer+'_'+rec.k]||[]):[];
+ const comMeta=fd.filter(m=>m[1]>0);
+ let cAt=0,cProj=0,cNao=0;
+ comMeta.forEach(m=>{const a=m[2]/m[1]*100; if(a>=100)cAt++; else if(a*23/15>=100)cProj++; else cNao++;});
+ const nTot=comMeta.length||1;
+ document.getElementById('julResumo').innerHTML=`
+  <div class="kpi"><div class="label">Marcas com meta</div><div class="value">${comMeta.length}</div><div class="foot">no recorte</div></div>
+  <div class="kpi green"><div class="label">Já atingiram</div><div class="value green">${cAt}</div><div class="foot">${(cAt/nTot*100).toFixed(0)}% • realizado ≥ meta</div></div>
+  <div class="kpi amber"><div class="label">Projetam atingir</div><div class="value" style="color:var(--amarelo)">${cProj}</div><div class="foot">${(cProj/nTot*100).toFixed(0)}% • no ritmo, batem até o fim</div></div>
+  <div class="kpi red"><div class="label">Não projetam atingir</div><div class="value red">${cNao}</div><div class="foot">${(cNao/nTot*100).toFixed(0)}% • ritmo insuficiente</div></div>`;
  const tb=document.querySelector('#julRisco tbody'); tb.innerHTML='';
  document.getElementById('julRiscoTitle').textContent=`Marcas em risco — ${rec.l} (${mgrNames[julGer]})`;
  if(!rec.r.length){
@@ -893,13 +927,19 @@ function renderJulho(){
  document.getElementById('julFullTitle').textContent=`Todas as marcas — ${rec.l} (${mgrNames[julGer]})`;
  ftb.innerHTML='';
  if(!full||!full.length){
-   ftb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--txt2);padding:18px">Detalhe por marca não carregado para este recorte.</td></tr>';
+   ftb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--txt2);padding:18px">Detalhe por marca não carregado para este recorte.</td></tr>';
  }else{
    const badge=s=>s==='ok'?'<span class="pos">Projeção atinge</span>':(s==='risco'?'<span class="neg">Insuficiente</span>':'Estoque cobre');
    full.slice().sort((a,b)=>b[1]-a[1]).forEach(m=>{
      const p=m[1]>0?m[2]/m[1]*100:null;
      const pc=p==null?'—':`<span class="${p>=100?'pos':(p<60?'neg':'')}">${pct(p)}</span>`;
-     ftb.innerHTML+=`<tr><td>${m[0]}</td><td>${fmtBRL(m[1])}</td><td>${fmtBRL(m[2])}</td><td>${pc}</td><td>${fmtBRL(m[3])}</td><td>${fmtBRL(m[4])}</td><td>${badge(m[5])}</td></tr>`;
+     const pj=p==null?'—':`<span class="${(p*23/15)>=100?'pos':((p*23/15)<80?'neg':'')}">${pct(p*23/15)}</span>`;
+     const proj=m[2]*23/15, gap=m[1]-m[4];
+     let motivo;
+     if(m[5]==='ok')motivo=`Projeção de R$ ${fmtBRL(proj)} já atinge a meta de R$ ${fmtBRL(m[1])}.`;
+     else if(m[5]==='risco')motivo=`Projeção (R$ ${fmtBRL(proj)}) abaixo da meta e o estoque só cobre R$ ${fmtBRL(m[4])} — faltam R$ ${fmtBRL(gap)} para a meta.`;
+     else motivo=`Projeção (R$ ${fmtBRL(proj)}) abaixo da meta, mas o estoque permite vender até R$ ${fmtBRL(m[4])}, cobrindo o que falta.`;
+     ftb.innerHTML+=`<tr><td>${m[0]}</td><td>${fmtBRL(m[1])}</td><td>${fmtBRL(m[2])}</td><td>${pc}</td><td>${pj}</td><td>${fmtBRL(m[3])}</td><td>${fmtBRL(m[4])}</td><td style="min-width:240px">${badge(m[5])}<div style="font-size:11px;color:var(--txt2);margin-top:3px;line-height:1.35">${motivo}</div></td></tr>`;
    });
  }
 }
