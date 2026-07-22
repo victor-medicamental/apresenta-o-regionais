@@ -314,6 +314,12 @@
     </div>
     <div class="card">
       <h3 id="julFullTitle">Todas as marcas — meta, realizado e cobertura por estoque</h3>
+      <div class="toggle-row" id="julFilter">
+        <button class="active" data-jf="todas">Todas</button>
+        <button data-jf="atingiu">Já atingiram</button>
+        <button data-jf="projeta">Projetam atingir</button>
+        <button data-jf="nao">Não projetam atingir</button>
+      </div>
       <div class="table-scroll" style="max-height:620px;overflow-y:auto"><table id="julFull">
         <thead><tr><th>Marca</th><th>Meta</th><th>Total NF</th><th>% Atingido</th><th>% Projeção</th><th>Valor Estoque</th><th>Possib. Venda</th><th>Meta atingível?</th></tr></thead><tbody></tbody>
       </table></div>
@@ -877,7 +883,7 @@ JULP['alberto_pr_f']={"NEOQ (S)":69.54,"NEOQ (G)":64.17,"NATULAB":121.76,"LEGRAN
 JULP['alberto_pr_h']={"G-TECH":120.14,"FARMAX (S)":191.15,"BIO INSTINTO":48.94,"FINI":96.86,"GRANADO":211.63,"HERBAMED (S)":63.46,"KATIGUA":82.06,"ARTE NATIVA (S)":69.37,"MEDLEVENSOHN (S)":151.34,"NUTRIN (S)":174.93,"SANFARMA (S)":79.43,"PRUDENCE":59.41,"CONFIRME":90.59,"VIDORA":58.99,"LANSINOH":126.04,"ABOVE":80.24,"FORTLIFE (CONSUMO)":53.74,"BELLAPHYTUS":94.65,"NUTRIEX":52.93,"DANA":274.87,"ZIINZIIN (S)":70.87,"SINTER":64.94,"SUNLESS":3816.92,"UNIPHAR":38.04,"ABELHA RAINHA":61.43};
 /* Projeção R$ total por recorte (linha Total da planilha) */
 const JPROJ={lucilene_farma:15604564.74,lucilene_hpc:1793122.44,rosa_farma:8358188.90,rosa_hpc:1304745.55,mauro_farma:4601663.05,mauro_hpc:965976.31,alberto_farma:4968422.63,alberto_hpc:1202740.95};
-let julGer='lucilene', julRec=0;
+let julGer='lucilene', julRec=0, julFilterMode='todas';
 function buildJulRec(){
  const box=document.getElementById('julRec');
  box.innerHTML='';
@@ -920,7 +926,18 @@ function renderJulho(){
  document.getElementById('julFullTitle').textContent=`Todas as marcas — ${rec.l} (${mgrNames[julGer]})`;
  ftb.innerHTML='';
  const badge=s=>s==='ok'?'<span class="pos">Projeção atinge</span>':(s==='risco'?'<span class="neg">Insuficiente</span>':'Estoque cobre');
- const shown=marcas.filter(m=>m.meta>0||m.nf!==0||m.est>0).sort((a,b)=>b.meta-a.meta);
+ let shown=marcas.filter(m=>m.meta>0||m.nf!==0||m.est>0);
+ if(julFilterMode!=='todas'){
+   shown=shown.filter(m=>{
+     if(m.meta<=0)return false;
+     const a=m.nf/m.meta*100;
+     if(julFilterMode==='atingiu')return a>=100;
+     if(julFilterMode==='projeta')return a<100&&m.proj!=null&&m.proj>=100;
+     if(julFilterMode==='nao')return a<100&&(m.proj==null||m.proj<100);
+     return true;
+   });
+ }
+ shown=shown.sort((a,b)=>b.meta-a.meta);
  if(!shown.length){
    ftb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--txt2);padding:18px">Sem dados para este recorte.</td></tr>';
  }else{
@@ -940,6 +957,10 @@ function renderJulho(){
 document.querySelectorAll('#julGer button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#julGer button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active'); julGer=b.dataset.jg; julRec=0; buildJulRec(); renderJulho();
+});
+document.querySelectorAll('#julFilter button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#julFilter button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); julFilterMode=b.dataset.jf; renderJulho();
 });
 
 /* ===== INIT ===== */
