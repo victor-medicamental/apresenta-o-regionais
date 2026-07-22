@@ -313,13 +313,6 @@
       <div class="kpi-grid" id="julResumo" style="margin-bottom:0"></div>
     </div>
     <div class="card">
-      <h3 id="julRiscoTitle">Marcas em risco — estoque insuficiente para a meta</h3>
-      <div class="table-scroll"><table id="julRisco">
-        <thead><tr><th>Marca</th><th>Meta</th><th>Realizado (NF)</th><th>% Atingido</th><th>Falta p/ meta (após estoque)</th></tr></thead><tbody></tbody>
-      </table></div>
-      <p class="note" id="julNote"></p>
-    </div>
-    <div class="card">
       <h3 id="julFullTitle">Todas as marcas — meta, realizado e cobertura por estoque</h3>
       <div class="table-scroll" style="max-height:620px;overflow-y:auto"><table id="julFull">
         <thead><tr><th>Marca</th><th>Meta</th><th>Total NF</th><th>% Atingido</th><th>% Projeção</th><th>Valor Estoque</th><th>Possib. Venda</th><th>Meta atingível?</th></tr></thead><tbody></tbody>
@@ -882,6 +875,8 @@ JULP['alberto_go_f']={"NEOQ (G)":225.66,"NEOQ (S)":21.22,"EURO (G)":12.04,"MULTI
 JULP['alberto_go_h']={"ABOVE":4855.51,"DANA":6767.23,"COTY":3558.75,"PRUDENCE":14067.11,"BIO INSTINTO":953.52,"FARMAX (S)":894.92,"ARTE NATIVA (S)":185.10,"GRANADO":2489.26,"G-TECH":41.74,"KATIGUA":211.54,"NUTRIEX":150.18,"VIDORA":276.36,"FINI":64.54,"HERBAMED (S)":92.09,"CONFIRME":111.54,"SANFARMA (S)":81.85,"DOMINA FARMA (S)":128.97,"BELLAPHYTUS":324.37,"ABELHA RAINHA":1150.08,"FORTLIFE (CONSUMO)":30.08,"ZIINZIIN (S)":60.82,"UNIPHAR":26.09};
 JULP['alberto_pr_f']={"NEOQ (S)":69.54,"NEOQ (G)":64.17,"NATULAB":121.76,"LEGRAND (S)":125.78,"TEUTO (G)":97.81,"EMS (S)":210.15,"EURO (G)":85.25,"MULTILAB (S)":61.58,"TEUTO (S)":87.57,"CAZI (S)":241.64,"SANDOZ (G)":234.52,"DELTA (S)":42.94,"PHARLAB (G)":65.76,"GEOLAB (S)":50.31,"PHARMASCIENCE (S)":90.88,"AIRELA (S)":108.05,"PHARMASCIENCE (G)":158.69,"GEOLAB (G)":43.43,"PHARLAB (S)":113.07,"ZYDUS (G)":33.52,"BRASTERAPICA (S)":244.21,"LEGRAND (G)":34.00,"BELFAR (S)":160.86,"VITAMEDIC (G)":86.48,"UNIAOQ (S)":145.31,"NEOQ (VIT)":21.85,"LEBON":81.57,"WALDEMIRO PEREIRA (S)":46.70,"MAKROFARMA (S)":80.73,"IMEC (S)":64.06,"VITAMEDIC (S)":36.87,"GREENPHARMA (S)":23.18,"CRISTALIA":35.84,"NATIVITA (S)":285.82,"GREENPHARMA (G)":31.05,"BIOCHIMICO":46.13,"MEDQ (S)":51.75,"NATIVITA (G)":887.75,"DELTA (G)":117.13,"GLOBO (G)":20.05,"MEDQ (G)":94.39,"BLAU":54.94,"BELFAR (G)":20.91};
 JULP['alberto_pr_h']={"G-TECH":120.14,"FARMAX (S)":191.15,"BIO INSTINTO":48.94,"FINI":96.86,"GRANADO":211.63,"HERBAMED (S)":63.46,"KATIGUA":82.06,"ARTE NATIVA (S)":69.37,"MEDLEVENSOHN (S)":151.34,"NUTRIN (S)":174.93,"SANFARMA (S)":79.43,"PRUDENCE":59.41,"CONFIRME":90.59,"VIDORA":58.99,"LANSINOH":126.04,"ABOVE":80.24,"FORTLIFE (CONSUMO)":53.74,"BELLAPHYTUS":94.65,"NUTRIEX":52.93,"DANA":274.87,"ZIINZIIN (S)":70.87,"SINTER":64.94,"SUNLESS":3816.92,"UNIPHAR":38.04,"ABELHA RAINHA":61.43};
+/* Projeção R$ total por recorte (linha Total da planilha) */
+const JPROJ={lucilene_farma:15604564.74,lucilene_hpc:1793122.44,rosa_farma:8358188.90,rosa_hpc:1304745.55,mauro_farma:4601663.05,mauro_hpc:965976.31,alberto_farma:4968422.63,alberto_hpc:1202740.95};
 let julGer='lucilene', julRec=0;
 function buildJulRec(){
  const box=document.getElementById('julRec');
@@ -898,16 +893,18 @@ function renderJulho(){
  const key=julGer+'_'+rec.k;
  const raw=(typeof JULM!=='undefined'&&JULM[key])?JULM[key]:[];
  const marcas=raw.map(m=>({n:m[0],meta:m[1],nf:m[2],proj:m[3],est:m[4],poss:m[5],st:m[6]}));
- let meta=0,nf=0,est=0,poss=0,risco=0;
- marcas.forEach(m=>{meta+=m.meta;nf+=m.nf;est+=m.est;poss+=m.poss;if(m.meta>0&&m.st==='risco')risco++;});
+ let meta=0,nf=0,est=0,poss=0;
+ marcas.forEach(m=>{meta+=m.meta;nf+=m.nf;est+=m.est;poss+=m.poss;});
  const at=meta>0?nf/meta*100:0;
  const cobP=meta>0?poss/meta*100:0;
+ const projRS=(typeof JPROJ!=='undefined'&&JPROJ[key]!=null)?JPROJ[key]:marcas.reduce((s,m)=>s+((m.proj!=null&&m.meta>0)?m.proj/100*m.meta:0),0);
+ const projPct=meta>0?projRS/meta*100:0;
  document.getElementById('julKpis').innerHTML=`
   <div class="kpi"><div class="label">Meta do mês</div><div class="value">${compactBRL(meta)}</div><div class="foot">R$ ${fmtBRL(meta)}</div></div>
   <div class="kpi ${at>=100?'green':(at>=60?'amber':'red')}"><div class="label">Realizado (NF)</div><div class="value ${at>=100?'green':(at<60?'red':'')}">${compactBRL(nf)}</div><div class="foot">${pct(at)} da meta</div></div>
+  <div class="kpi ${projPct>=100?'green':(projPct>=80?'amber':'red')}"><div class="label">Projeção R$ (fim do mês)</div><div class="value ${projPct>=100?'green':(projPct<80?'red':'')}">${compactBRL(projRS)}</div><div class="foot">${pct(projPct)} da meta • R$ ${fmtBRL(projRS)}</div></div>
   <div class="kpi"><div class="label">Valor em estoque</div><div class="value">${compactBRL(est)}</div><div class="foot">R$ ${fmtBRL(est)}</div></div>
-  <div class="kpi ${cobP>=100?'green':'amber'}"><div class="label">Possibilidade de venda</div><div class="value">${compactBRL(poss)}</div><div class="foot">${pct(cobP)} da meta em estoque</div></div>
-  <div class="kpi ${risco>0?'red':'green'}"><div class="label">Marcas em risco</div><div class="value ${risco>0?'red':'green'}">${risco}</div><div class="foot">estoque não cobre a meta</div></div>`;
+  <div class="kpi ${cobP>=100?'green':'amber'}"><div class="label">Possibilidade de venda</div><div class="value">${compactBRL(poss)}</div><div class="foot">${pct(cobP)} da meta em estoque</div></div>`;
  /* resumo de contagem de marcas com meta */
  const comMeta=marcas.filter(m=>m.meta>0);
  let cAt=0,cProj=0,cNao=0;
@@ -918,19 +915,6 @@ function renderJulho(){
   <div class="kpi green"><div class="label">Já atingiram</div><div class="value green">${cAt}</div><div class="foot">${(cAt/nTot*100).toFixed(0)}% • realizado ≥ meta</div></div>
   <div class="kpi amber"><div class="label">Projetam atingir</div><div class="value" style="color:var(--amarelo)">${cProj}</div><div class="foot">${(cProj/nTot*100).toFixed(0)}% • no ritmo, batem até o fim</div></div>
   <div class="kpi red"><div class="label">Não projetam atingir</div><div class="value red">${cNao}</div><div class="foot">${(cNao/nTot*100).toFixed(0)}% • ritmo insuficiente</div></div>`;
- const tb=document.querySelector('#julRisco tbody'); tb.innerHTML='';
- document.getElementById('julRiscoTitle').textContent=`Marcas em risco — ${rec.l} (${mgrNames[julGer]})`;
- const risk=marcas.filter(m=>m.meta>0&&m.st==='risco');
- if(!risk.length){
-   tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--verde);font-weight:700;padding:22px">✓ Nenhuma marca em risco neste recorte — o estoque cobre todas as metas.</td></tr>';
-   document.getElementById('julNote').textContent='Todas as marcas têm estoque suficiente (ou projeção que já atinge a meta) neste recorte.';
- }else{
-   risk.slice().sort((a,b)=>(a.poss-a.meta)-(b.poss-b.meta)).forEach(m=>{
-     const p=m.meta>0?m.nf/m.meta*100:0; const falta=m.poss-m.meta;
-     tb.innerHTML+=`<tr><td><b>${m.n}</b></td><td>${fmtBRL(m.meta)}</td><td>${fmtBRL(m.nf)}</td><td class="neg">${pct(p)}</td><td class="neg" style="font-weight:700">${fmtBRL(falta)}</td></tr>`;
-   });
-   document.getElementById('julNote').innerHTML='<b>Falta p/ meta (após estoque)</b> = quanto ainda falta para bater a meta mesmo esgotando toda a possibilidade de venda em estoque. Ordenado do maior déficit para o menor.';
- }
  /* tabela completa */
  const ftb=document.querySelector('#julFull tbody');
  document.getElementById('julFullTitle').textContent=`Todas as marcas — ${rec.l} (${mgrNames[julGer]})`;
