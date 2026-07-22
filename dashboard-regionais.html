@@ -840,28 +840,36 @@ document.getElementById('mkSearch').addEventListener('input',()=>renderMarcas())
 
 /* ===== JULHO (Estoque x Meta) ===== */
 /* t=[meta, realizado NF, valor estoque, possibilidade venda, nº marcas em risco]; r=[nome, meta, nf, falta p/ meta] */
+/* Recortes consolidados por gerente: cada categoria soma as filiais (por marca) */
 const JUL={
- lucilene:[
-  {k:'go_f',l:'Farma GO · Farma',t:[3414605.04,1612894.13,15957565.46,19556062.76,6],r:[['PHARMASCIENCE (G)',22248.64,11026.13,-182.68],['GLOBO (S)',8310.08,498.70,-1374.27],['BLAU',3285.37,279.94,-1530.13],['MALAVASI',823.51,0,-823.51],['EMS (G)',411.82,0,-411.82],['NOVA QUIMICA (G)',279.61,0,-279.61]]},
-  {k:'go_h',l:'Farma GO · HPC',t:[511957.64,105421.02,2144599.76,2680749.70,1],r:[['UNIPHAR',2935.69,0,-2225.02]]},
-  {k:'sp_f',l:'Farma SP · Farma',t:[20639728.08,8563995.92,15662658.56,19259131.90,9],r:[['NEOQ (S)',4675678.30,1322233.97,-731400.47],['EURO (G)',4474757.41,2000972.15,-782920.06],['NUTIVIT',160023.91,4046.89,-101060.35],['MEDLEY (G)',138981.99,12739.97,-95914.82],['PHARMASCIENCE (G)',81060.48,1147.82,-76017.04],['NEOQ (VIT)',266227.68,53070.74,-21149.18],['VITAMEDIC (G)',135004.97,58831.48,-7594.93],['BELFAR (G)',879.70,-89.06,-936.44],['MEDLEY (S)',314.48,0,-314.48]]},
-  {k:'sp_h',l:'Farma SP · HPC',t:[2691049.91,1064006.66,3508377.76,4380191.84,4],r:[['LANSINOH',241447.70,612.56,-240608.34],['ZIINZIIN (S)',98490.13,9634.36,-87193.23],['BANANA BRASIL',706.92,-39.00,-745.92],['ALQUIMIA',0,-359.14,-359.14]]}
- ],
- rosa:[
-  {k:'go_f',l:'Farma GO · Farma',t:[8097724.39,5450992.76,15957565.46,19556062.76,5],r:[['PHARMASCIENCE (G)',72066.82,33729.53,-27297.47],['GLOBO (S)',22026.03,2726.91,-12862.01],['MALAVASI',2251.09,29.99,-2221.10],['EMS (G)',807.96,0,-807.96],['NOVA QUIMICA (G)',548.57,7.51,-541.06]]},
-  {k:'go_h',l:'Farma GO · HPC',t:[1295314.85,850921.01,2144599.76,2680749.70,2],r:[['FINI',221332.39,121888.42,-31844.08],['UNIPHAR',5759.55,280.05,-4768.83]]}
- ],
- mauro:[
-  {k:'rj_f',l:'Farma RJ · Farma',t:[5545279.39,2981268.61,6746031.08,8312798.78,6],r:[['LEGRAND (G)',251641.74,90978.01,-69965.73],['PHARMASCIENCE (G)',66164.68,27318.23,-23023.39],['BELFAR (S)',57240.25,15230.49,-7303.54],['MAKROFARMA (S)',9200.37,3815.76,-4570.24],['BELFAR (G)',5025.56,247.31,-4727.51],['HEARST (S)',310.14,0,-310.14]]},
-  {k:'rj_h',l:'Farma RJ · HPC',t:[1221456.53,609000.82,1502929.16,1878661.45,0],r:[]}
- ],
- alberto:[
-  {k:'go_f',l:'Farma GO · Farma',t:[448003.50,156787.42,15957565.46,19556062.76,3],r:[['MALAVASI',108.05,0,-108.05],['EMS (G)',54.03,0,-54.03],['NOVA QUIMICA (G)',36.69,0,-36.69]]},
-  {k:'go_h',l:'Farma GO · HPC',t:[67169.94,66373.45,2144599.76,2680749.70,0],r:[]},
-  {k:'pr_f',l:'Farma PR · Farma',t:[5972898.86,3076137.59,5383353.61,6608782.22,11],r:[['ZYDUS (G)',116492.10,25468.15,-38739.79],['NEOQ (G)',1152396.74,482250.17,-29031.21],['LEGRAND (G)',83871.11,18596.18,-21130.46],['GEOLAB (S)',136157.15,41691.92,-18561.15],['GEOLAB (G)',96237.63,27257.11,-15260.03],['GLOBO (G)',8137.87,993.36,-5424.35],['GREENPHARMA (S)',28404.22,4294.34,-4517.26],['BELFAR (G)',2690.74,97.87,-2467.32],['NEOQ (VIT)',95586.61,13621.28,-1044.35],['BLAU',2754.16,328.94,-870.10],['BIOLAB (G)',0,-336.06,-323.31]]},
-  {k:'pr_h',l:'Farma PR · HPC',t:[1183460.75,717213.97,2140747.51,2675934.39,1],r:[['UNIPHAR',2167.70,286.78,-1315.17]]}
- ]
+ lucilene:[{k:'farma',l:'Farma (GO + SP)',keys:['lucilene_go_f','lucilene_sp_f']},{k:'hpc',l:'HPC (GO + SP)',keys:['lucilene_go_h','lucilene_sp_h']}],
+ rosa:[{k:'farma',l:'Farma (GO)',keys:['rosa_go_f']},{k:'hpc',l:'HPC (GO)',keys:['rosa_go_h']}],
+ mauro:[{k:'farma',l:'Farma (RJ)',keys:['mauro_rj_f']},{k:'hpc',l:'HPC (RJ)',keys:['mauro_rj_h']}],
+ alberto:[{k:'farma',l:'Farma (GO + PR)',keys:['alberto_go_f','alberto_pr_f']},{k:'hpc',l:'HPC (GO + PR)',keys:['alberto_go_h','alberto_pr_h']}]
 };
+/* Mescla marcas de várias filiais somando meta/nf/estoque/possib.; projeção R$ ponderada; situação recalculada */
+function combineJul(keys){
+ const map={};
+ keys.forEach(k=>{
+   const rows=(typeof JULM!=='undefined'&&JULM[k])?JULM[k]:[];
+   const pm=(typeof JULP!=='undefined'&&JULP[k])?JULP[k]:{};
+   rows.forEach(m=>{
+     const n=m[0]; if(!map[n])map[n]={meta:0,nf:0,est:0,poss:0,projRS:0};
+     const o=map[n]; o.meta+=m[1]; o.nf+=m[2]; o.est+=m[3]; o.poss+=m[4];
+     const pr=pm[n]; if(pr!=null)o.projRS+=pr/100*m[1];
+   });
+ });
+ return Object.keys(map).map(n=>{
+   const o=map[n];
+   const proj=o.meta>0?(o.projRS/o.meta*100):null;
+   let st;
+   if(o.meta<=0)st=(o.nf>0?'ok':'estq');
+   else if(proj!=null&&proj>=100)st='ok';
+   else if(o.poss>=o.meta)st='estq';
+   else st='risco';
+   return {n:n,meta:o.meta,nf:o.nf,est:o.est,poss:o.poss,proj:proj,st:st};
+ });
+}
 /* Detalhe completo por marca. Chave: gerente_recorte. Linha: [marca, meta, NF, valor estoque, possib. venda, situação(ok|estq|risco)] */
 const JULM={};
 JULM['lucilene_go_f']=[["EURO (G)",935487.23,892362.93,2151236.80,2581484.16,"ok"],["SANDOZ (G)",60869.21,181572.53,2013609.26,2517011.58,"ok"],["NEOQ (S)",618147.21,155895.69,2162415.31,2594898.37,"estq"],["NEOQ (G)",419555.14,84574.14,3279506.14,3935407.37,"estq"],["PHARLAB (G)",80994.50,33264.34,465044.14,581305.18,"estq"],["GEOLAB (S)",166027.77,24167.49,335721.19,419651.49,"estq"],["GERMED (G)",79200.51,21347.33,238017.69,297522.11,"estq"],["NATULAB",84245.58,21053.39,499501.13,624376.41,"estq"],["BIOLAB (G)",25698.68,20134.25,426987.02,533733.78,"ok"],["BELFAR (S)",19685.88,19080.70,25195.37,31494.21,"ok"],["LEGRAND (S)",82207.34,13271.67,156963.84,196204.80,"estq"],["MULTILAB (S)",97253.47,12523.73,292175.60,365219.50,"estq"],["ZYDUS (G)",59441.47,11986.71,182354.77,227943.46,"estq"],["BIOSINTETICA (G)",29402.99,11935.83,63185.16,78981.45,"estq"],["AIRELA (S)",16121.05,11169.25,201777.89,252222.36,"ok"],["PHARMASCIENCE (G)",22248.64,11026.13,8831.86,11039.83,"risco"],["GEOLAB (G)",86997.22,10233.16,207583.34,259479.18,"estq"],["CAZI (S)",22651.95,8984.38,73782.12,92227.65,"estq"],["MEDLEY (G)",38212.48,8320.97,139571.77,174464.71,"estq"],["PHARLAB (S)",15456.90,7590.68,58596.49,73245.61,"estq"],["DELTA (S)",122777.52,5619.69,479433.33,599291.66,"estq"],["UNIAOQ (G)",11172.69,4408.11,61700.08,77125.10,"estq"],["UNICHEM",2596.71,3997.27,29916.32,37395.40,"ok"],["UNIAOQ (S)",23425.63,3513.69,85141.05,106426.31,"estq"],["NATIVITA (S)",7737.68,3289.35,34436.42,43045.53,"estq"],["GREENPHARMA (G)",15494.76,3167.12,41805.42,52256.78,"estq"],["NEOQ (VIT)",17683.44,2804.21,224722.99,269667.59,"estq"],["BRASTERAPICA (S)",12109.54,2251.65,119457.52,149321.90,"estq"],["NATIVITA (G)",3870.81,2125.86,34069.53,42586.91,"ok"],["BIOLAB (S)",14831.62,2066.54,416852.49,521065.61,"estq"],["CIMED (S)",381.54,2001.09,47689.97,59612.46,"ok"],["PHARMASCIENCE (S)",44222.09,1974.43,85834.48,107293.10,"estq"],["MERCK (G)",7438.38,1664.96,22033.08,27541.35,"estq"],["LEBON",11923.81,1569.54,59616.43,74520.54,"estq"],["VITAMEDIC (G)",35977.97,1507.37,124038.53,155048.16,"estq"],["VITAMEDIC (S)",26121.35,1288.88,230849.87,288562.34,"estq"],["CRISTALIA",3700.11,1152.36,54882.07,68602.59,"estq"],["CIFARMA (S)",71.55,1030.64,3678.09,4597.61,"ok"],["BIOCHIMICO",7504.13,1012.08,34502.14,43127.68,"estq"],["SANDOZ (S)",4290.67,738.77,199700.45,249625.56,"estq"],["EMS (S)",8033.33,701.13,124760.65,155950.81,"estq"],["BIOSINTETICA (S)",1158.25,568.79,3606.88,4508.60,"ok"],["GLOBO (S)",8310.08,498.70,5149.69,6437.11,"risco"],["GLAXO",6855.70,475.78,99500.89,124376.11,"estq"],["IMEC (S)",18088.17,439.22,46978.42,58723.03,"estq"],["MAKROFARMA (S)",4014.80,416.47,10796.99,13496.24,"ok"],["SANOFI (S)",365.57,385.83,29255.60,36569.50,"ok"],["DELTA (G)",3233.90,345.55,22365.10,27956.38,"estq"],["WALDEMIRO PEREIRA (S)",2701.45,327.51,55516.52,69395.65,"ok"],["BELFAR (G)",1765.27,313.28,3684.70,4605.88,"ok"],["GREENPHARMA (S)",4690.31,309.19,23142.60,28928.25,"estq"],["BLAU",3285.37,279.94,1180.24,1475.30,"risco"],["NUTIVIT",4941.28,193.20,32795.05,40993.81,"estq"],["MEDQ (S)",465.40,173.02,70461.17,88076.46,"ok"],["MEDLEY (S)",50.49,23.61,136.50,170.63,"ok"],["MERCK (S)",33.27,0,1782.24,2227.80,"estq"],["ALMEIDA PRADO (S)",33.89,0,12266.35,15332.94,"estq"],["MALAVASI",823.51,0,0,0,"risco"],["EMS (G)",411.82,0,0,0,"risco"],["NOVA QUIMICA (G)",279.61,0,0,0,"risco"],["GLOBO (G)",11826.35,-211.72,31177.91,38972.39,"estq"]];
@@ -876,6 +884,19 @@ JULM['alberto_go_f']=[["NEOQ (G)",55046.53,81010.39,3279506.14,3935407.37,"ok"],
 JULM['alberto_go_h']=[["ABOVE",2196.71,13912.37,91081.41,113851.76,"ok"],["DANA",1434.11,12658.64,80929.45,101161.81,"ok"],["COTY",1516.84,9387.93,42563.78,53204.73,"ok"],["PRUDENCE",734.87,8989.13,126200.74,157750.93,"ok"],["BIO INSTINTO",3678.64,7625.37,101842.22,127302.78,"ok"],["FARMAX (S)",1038.66,2828.97,58765.37,73456.71,"ok"],["ARTE NATIVA (S)",4773.34,2689.08,101792.93,127241.16,"ok"],["GRANADO",745.89,2421.80,37870,47337.50,"ok"],["G-TECH",16428.33,2086.89,374567.52,468209.40,"estq"],["KATIGUA",5421.09,1994.43,112882.22,141102.78,"ok"],["NUTRIEX",3081.74,402.46,225233.77,281542.21,"ok"],["VIDORA",808.20,291.33,55148.25,68935.31,"ok"],["FINI",9698.14,272.12,54079.91,67599.89,"estq"],["HERBAMED (S)",2467.22,197.58,123597.33,154496.66,"estq"],["CONFIRME",1060.79,154.33,23004.07,28755.09,"ok"],["SANFARMA (S)",1369.10,146.16,60082.01,75102.51,"estq"],["DOMINA FARMA (S)",851.14,95.45,18749.75,23437.19,"ok"],["BELLAPHYTUS",652.77,92.06,16291.61,20364.51,"ok"],["ABELHA RAINHA",152.05,76.03,24098.74,30123.43,"ok"],["FORTLIFE (CONSUMO)",2208.83,28.89,74347.44,92934.30,"estq"],["ZIINZIIN (S)",682.91,18.06,18452.33,23065.41,"estq"],["UNIPHAR",385.17,4.37,568.54,710.68,"estq"],["NUTRIN (S)",5134.85,0,199591.63,249489.54,"estq"],["SUNLESS",310.55,0,19444.77,24305.96,"estq"],["PIRACANJUBA",112.67,0,16147.01,20183.76,"estq"],["MEDLEVENSOHN (S)",140.57,0,8690.76,10863.45,"estq"],["SINTER",84.76,0,17634.70,22043.38,"estq"],["DENTALCLEAN",0,0,33723.52,42154.40,"estq"],["HADASSAH",0,0,15238.20,19047.75,"estq"],["JOY (S)",0,0,6422.95,8028.69,"estq"],["PARAIBUNA",0,0,2773.07,3466.34,"estq"],["BIGFRAL",0,0,1649,2061.25,"estq"],["BIOCEUTICA",0,0,863.86,1079.83,"estq"],["LANSINOH",0,0,270.90,338.63,"estq"]];
 JULM['alberto_pr_f']=[["NEOQ (S)",1661494.61,753507.24,1194768.18,1433721.82,"estq"],["NEOQ (G)",1152396.74,482250.17,534262.80,641115.36,"risco"],["NATULAB",252155.05,200228.29,298179.40,372724.25,"ok"],["LEGRAND (S)",239828.47,196733.99,197757.19,247196.49,"ok"],["TEUTO (G)",266849.97,170228.90,312728.69,390910.86,"estq"],["EMS (S)",120171.88,164697.68,211017.43,263771.79,"ok"],["EURO (G)",295139.00,164089.72,611730.64,734076.77,"estq"],["MULTILAB (S)",311492.83,125088.65,212134.61,265168.26,"estq"],["TEUTO (S)",213274.91,121798.85,228643.44,285804.30,"estq"],["CAZI (S)",71326.07,112404.02,205726.78,257158.48,"ok"],["SANDOZ (G)",43524.07,66570.22,146010.95,182513.69,"ok"],["DELTA (S)",205866.57,57651.52,193364.29,241705.36,"estq"],["PHARLAB (G)",111338.10,47749.26,115670.96,144588.70,"estq"],["GEOLAB (S)",136157.15,41691.92,60723.26,75904.08,"risco"],["PHARMASCIENCE (S)",65223.75,36081.25,39897.58,49871.98,"estq"],["AIRELA (S)",42198.45,29737.16,55744.62,69680.78,"ok"],["PHARMASCIENCE (G)",45308.23,28133.82,248.04,310.05,"ok"],["GEOLAB (G)",96237.63,27257.11,42976.39,53720.49,"risco"],["PHARLAB (S)",34891.00,25728.38,42095.37,52619.21,"ok"],["ZYDUS (G)",116492.10,25468.15,41827.33,52284.16,"risco"],["GERMED (G)",0,23423.64,129161.63,161452.04,"ok"],["BRASTERAPICA (S)",11788.53,18775.23,30324.76,37905.95,"ok"],["LEGRAND (G)",83871.11,18596.18,35315.58,44144.48,"risco"],["BELFAR (S)",16844.88,16493.74,5442.89,6803.61,"ok"],["VITAMEDIC (G)",28748.35,16214.20,18734.39,23417.99,"estq"],["UNIAOQ (S)",18236.27,16130.27,31654.71,39568.39,"ok"],["NEOQ (VIT)",95586.61,13621.28,67434.15,80920.98,"risco"],["LEBON",22781.19,12118.55,29583.02,36978.78,"estq"],["WALDEMIRO PEREIRA (S)",49576.59,12079.60,76414.52,95518.15,"estq"],["MAKROFARMA (S)",25030.72,8786.03,48450.24,60562.80,"estq"],["IMEC (S)",18591.58,7767.51,13659.75,17074.69,"estq"],["VITAMEDIC (S)",25228.06,6066.87,28507.14,35633.93,"estq"],["UNICHEM",0,5200.94,0,0,"ok"],["GREENPHARMA (S)",28404.22,4294.34,15674.10,19592.63,"risco"],["CRISTALIA",14441.19,3150.87,16764.17,20955.21,"estq"],["NATIVITA (S)",1681.38,3134.14,1890.49,2363.11,"ok"],["GREENPHARMA (G)",15725.26,2760.20,20722.36,25902.95,"estq"],["BIOCHIMICO",9509.31,2288.68,16036.14,20045.18,"estq"],["MEDQ (S)",7020.57,2211.29,4071.89,5089.86,"estq"],["NATIVITA (G)",243.78,1411.40,7256.13,9070.16,"ok"],["DELTA (G)",2330.03,1186.61,8323.95,10404.94,"ok"],["CIFARMA (S)",0,1121.99,8197.61,10247.01,"ok"],["GLOBO (G)",8137.87,993.36,1376.13,1720.16,"risco"],["MEDQ (G)",2276.68,840.92,2725.23,3406.54,"estq"],["BLAU",2754.16,328.94,1244.10,1555.13,"risco"],["ALMEIDA PRADO (S)",0,185.87,1997.77,2497.21,"ok"],["BELFAR (G)",2690.74,97.87,100.44,125.55,"risco"],["NUTIVIT",0,96.83,10256.52,12820.65,"ok"],["GLOBO (S)",33.20,0,200.20,250.25,"estq"],["BIOLAB (S)",0,0,40.65,50.81,"estq"],["SUPLEFAR",0,0,6274.80,7843.50,"estq"],["BIOLAB (G)",0,-336.06,10.20,12.75,"risco"]];
 JULM['alberto_pr_h']=[["G-TECH",243593.57,190867.20,463896.24,579870.30,"ok"],["FARMAX (S)",48228.12,60123.65,87169.37,108961.71,"ok"],["BIO INSTINTO",175717.55,56082.34,194361.92,242952.40,"estq"],["FINI",86226.65,50835.23,63838.71,79798.39,"estq"],["GRANADO",33528.83,46275.74,42176.88,52721.10,"ok"],["HERBAMED (S)",96132.47,39785.53,185110.18,231387.73,"estq"],["KATIGUA",69092.44,36978.17,101919.56,127399.45,"estq"],["ARTE NATIVA (S)",78378.74,35460.75,70731.76,88414.70,"estq"],["MEDLEVENSOHN (S)",33957.40,29046.21,28815.11,36018.89,"ok"],["NUTRIN (S)",23708.42,27047.00,245017.04,306271.30,"ok"],["SANFARMA (S)",50951.14,26394.81,74979.83,93724.79,"estq"],["PRUDENCE",45380.30,17584.24,85407.90,106759.88,"estq"],["CONFIRME",29349.28,17340.17,18607.56,23259.45,"estq"],["VIDORA",34811.57,13391.85,41300.23,51625.29,"estq"],["MAXINUTRI",0,10929.39,43068.80,53836.00,"ok"],["LANSINOH",39715.41,10881.66,9872.28,12340.35,"ok"],["ABOVE",18028.49,9434.03,35895.03,44868.79,"estq"],["FORTLIFE (CONSUMO)",26752.47,9376.15,45588.22,56985.28,"estq"],["BELLAPHYTUS",11268.00,6955.43,17446.29,21807.86,"estq"],["NUTRIEX",17583.79,6070.11,61665.99,77082.49,"estq"],["DANA",2509.18,4498.09,26401.48,33001.85,"ok"],["ZIINZIIN (S)",9053.84,3905.45,17703.05,22128.81,"estq"],["DOMINA FARMA (S)",0,2658.83,14630,18287.50,"ok"],["SINTER",5995.78,2370.16,16998.86,21248.58,"estq"],["PIRACANJUBA",0,889.26,14924.51,18655.64,"ok"],["SUNLESS",225.85,749.61,37298.84,46623.55,"ok"],["DENTALCLEAN",0,691.20,22705.58,28381.98,"ok"],["UNIPHAR",2167.70,286.78,452.60,565.75,"risco"],["FLOPI",0,214.35,14049.83,17562.29,"ok"],["PARAIBUNA",0,55.19,2931.04,3663.80,"ok"],["ABELHA RAINHA",1103.76,29.48,36467.05,45583.81,"estq"],["EMANA",0,5.91,10231.15,12788.94,"estq"],["BIOCEUTICA",0,0,1078.20,1347.75,"estq"],["JOY (S)",0,0,8006.42,10008.03,"estq"]];
+/* % PROJEÇÃO real (coluna da planilha, base ritmo/PME). Chave gerente_recorte → {marca: % projeção} */
+const JULP={};
+JULP['lucilene_go_h']={"FINI":337.00,"G-TECH":22.01,"KATIGUA":21.38,"NUTRIN (S)":13.51,"ARTE NATIVA (S)":41.29,"BIO INSTINTO":5.68,"NUTRIEX":2.24,"HERBAMED (S)":13.10,"FORTLIFE (CONSUMO)":10.62,"ABOVE":5.04,"COTY":13.03,"DANA":24.80,"SANFARMA (S)":33.73,"CONFIRME":31.61,"FARMAX (S)":31.41,"DOMINA FARMA (S)":68.05,"VIDORA":23.74,"GRANADO":50.70,"PRUDENCE":21.48,"ZIINZIIN (S)":135.70,"BELLAPHYTUS":44.48,"SUNLESS":24.57,"PIRACANJUBA":574.20};
+JULP['lucilene_sp_f']={"NEOQ (G)":83.12,"EURO (G)":68.57,"NEOQ (S)":46.46,"BIOSINTETICA (G)":87.37,"SANDOZ (G)":50.69,"PHARLAB (G)":104.58,"LEGRAND (G)":91.36,"GEOLAB (G)":54.92,"MULTILAB (S)":68.05,"NATULAB":43.78,"LEGRAND (S)":40.72,"DELTA (S)":74.34,"CAZI (S)":5144.71,"ZYDUS (G)":79.26,"GEOLAB (S)":79.75,"EMS (S)":90.06,"VITAMEDIC (G)":71.59,"AIRELA (S)":101.01,"BIOLAB (S)":127.03,"NEOQ (VIT)":32.75,"BIOLAB (G)":64.38,"PHARLAB (S)":160.38,"LEBON":79.31,"PHARMASCIENCE (S)":106.66,"BRASTERAPICA (S)":75.50,"UNIAOQ (S)":34.40,"BIOSINTETICA (S)":119.58,"GLAXO":125.73,"UNICHEM":165.71,"NATIVITA (S)":193.26,"UNIAOQ (G)":93.84,"GREENPHARMA (G)":119.50,"MEDLEY (G)":15.06,"BLAU":309.20,"NATIVITA (G)":131.90,"VITAMEDIC (S)":39.72,"IMEC (S)":106.93,"BELFAR (S)":67.28,"BIOCHIMICO":78.63,"CRISTALIA":268.27,"GLOBO (S)":465.56,"GREENPHARMA (S)":72.67,"SANDOZ (S)":53.16,"DELTA (G)":218.53,"GLOBO (G)":57.18,"MALAVASI":3067.80,"MAKROFARMA (S)":84.96,"MEDQ (S)":18.12,"NUTIVIT":4.47,"MEDQ (G)":104.45,"PHARMASCIENCE (G)":5.43,"BELFAR (G)":-116.42,"WALDEMIRO PEREIRA (S)":-59.65};
+JULP['lucilene_sp_h']={"G-TECH":122.53,"FINI":273.49,"HERBAMED (S)":45.37,"KATIGUA":57.39,"BIO INSTINTO":85.68,"NUTRIN (S)":66.50,"ARTE NATIVA (S)":81.11,"MEDLEVENSOHN (S)":165.06,"NUTRIEX":81.08,"FORTLIFE (CONSUMO)":96.34,"ABOVE":35.58,"SANFARMA (S)":89.20,"MAXINUTRI":18.79,"BELLAPHYTUS":79.75,"COTY":88.43,"PRUDENCE":57.47,"GRANADO":90.99,"DANA":26.07,"FARMAX (S)":244.42,"DOMINA FARMA (S)":65.05,"ZIINZIIN (S)":16.07,"VIDORA":99.66,"EURO (CONSUMO)":53.18,"SINTER":131.51,"CONFIRME":75.86,"ABELHA RAINHA":138.99,"SUNLESS":73.37,"UNIPHAR":363.09,"LANSINOH":2.92,"EURO (OTC)":-12.97};
+JULP['rosa_go_f']={"EURO (G)":76.69,"NEOQ (S)":146.28,"NEOQ (G)":149.42,"DELTA (S)":113.07,"GEOLAB (S)":67.46,"MULTILAB (S)":98.31,"PHARLAB (G)":108.74,"LEGRAND (S)":104.01,"VITAMEDIC (G)":177.00,"ZYDUS (G)":108.69,"CAZI (S)":273.54,"SANDOZ (G)":54.42,"GEOLAB (G)":65.20,"NATULAB":52.72,"BIOLAB (G)":165.32,"MEDLEY (G)":123.79,"VITAMEDIC (S)":130.73,"GERMED (G)":55.02,"AIRELA (S)":142.05,"UNICHEM":848.13,"PHARMASCIENCE (S)":58.90,"BIOSINTETICA (G)":194.55,"IMEC (S)":109.48,"BIOLAB (S)":149.76,"PHARMASCIENCE (G)":71.76,"PHARLAB (S)":106.31,"BELFAR (S)":76.62,"EMS (S)":127.53,"MERCK (G)":241.11,"BRASTERAPICA (S)":114.06,"UNIAOQ (S)":52.73,"LEBON":97.81,"NATIVITA (S)":148.00,"GLAXO":152.41,"NEOQ (VIT)":80.14,"NUTIVIT":230.51,"GREENPHARMA (G)":72.06,"GLOBO (G)":80.41,"BIOCHIMICO":98.13,"UNIAOQ (G)":49.34,"SANDOZ (S)":57.16,"NATIVITA (G)":191.09,"BLAU":154.28,"SANOFI (S)":1566.38,"DELTA (G)":126.32,"CIMED (S)":1411.85,"GREENPHARMA (S)":79.08,"BIOSINTETICA (S)":789.66,"CRISTALIA":105.27,"MAKROFARMA (S)":85.51,"GLOBO (S)":18.98,"WALDEMIRO PEREIRA (S)":75.50,"MEDQ (S)":103.64,"CIFARMA (S)":125.60,"BELFAR (G)":32.59,"ALMEIDA PRADO (S)":3062.70,"MEDLEY (S)":4665.71,"MALAVASI":30.64,"NOVA QUIMICA (G)":31.49};
+JULP['rosa_go_h']={"G-TECH":133.04,"FINI":90.47,"NUTRIN (S)":126.83,"ARTE NATIVA (S)":86.39,"KATIGUA":93.69,"FARMAX (S)":238.31,"FORTLIFE (CONSUMO)":133.50,"BIO INSTINTO":49.62,"PRUDENCE":181.22,"HERBAMED (S)":82.15,"GRANADO":208.30,"NUTRIEX":53.38,"CONFIRME":114.03,"ABOVE":54.24,"VIDORA":108.89,"SANFARMA (S)":60.48,"ZIINZIIN (S)":124.54,"BELLAPHYTUS":64.81,"COTY":39.97,"MEDLEVENSOHN (S)":432.79,"DANA":34.17,"DOMINA FARMA (S)":42.79,"SUNLESS":70.19,"ABELHA RAINHA":62.70,"LANSINOH":24796.49,"PIRACANJUBA":123.80,"SINTER":87.80,"UNIPHAR":18.64};
+JULP['mauro_rj_f']={"NEOQ (S)":70.84,"NEOQ (G)":65.79,"EURO (G)":80.65,"GEOLAB (G)":80.49,"GEOLAB (S)":97.11,"SANDOZ (G)":198.95,"PHARLAB (G)":70.84,"NATULAB":70.80,"LEGRAND (G)":55.44,"MEDLEY (G)":68.74,"ZYDUS (G)":186.63,"MULTILAB (S)":68.91,"VITAMEDIC (G)":91.85,"LEGRAND (S)":80.35,"AIRELA (S)":133.46,"DELTA (S)":68.62,"BRASTERAPICA (S)":143.44,"PHARMASCIENCE (G)":63.31,"EMS (S)":280.34,"LEBON":374.89,"GLAXO":39.73,"UNICHEM":338.28,"NATIVITA (S)":126.39,"MERCK (G)":158.77,"PHARMASCIENCE (S)":52.28,"VITAMEDIC (S)":93.94,"SANDOZ (S)":136.53,"NATIVITA (G)":80.36,"PHARLAB (S)":93.59,"NEOQ (VIT)":95.62,"BELFAR (S)":40.80,"GREENPHARMA (G)":217.70,"GLOBO (G)":61.64,"CAZI (S)":190.59,"CRISTALIA":61.00,"UNIAOQ (S)":107.97,"IMEC (S)":56.24,"GLOBO (S)":120.24,"DELTA (G)":57.64,"BIOCHIMICO":113.83,"MAKROFARMA (S)":79.49,"MEDLEY (S)":1366.91,"WALDEMIRO PEREIRA (S)":38.50,"BLAU":1532.38,"GREENPHARMA (S)":814.34,"UNIAOQ (G)":95.12,"MEDQ (S)":134.71,"NUTIVIT":39.71,"MEDQ (G)":10.81,"BELFAR (G)":16.17};
+JULP['mauro_rj_h']={"FINI":94.95,"GRANADO":100.52,"KATIGUA":51.55,"ARTE NATIVA (S)":92.42,"HERBAMED (S)":96.62,"G-TECH":79.74,"MAXINUTRI":27.51,"SANFARMA (S)":106.62,"PRUDENCE":111.01,"FARMAX (S)":59.98,"NUTRIN (S)":80.76,"ZIINZIIN (S)":222.95,"FORTLIFE (CONSUMO)":59.95,"BIO INSTINTO":50.07,"CONFIRME":84.47,"VIDORA":87.65,"SINTER":98.92,"BELLAPHYTUS":48.16,"SUNLESS":24.30,"LANSINOH":16049.36,"ABELHA RAINHA":106.66,"DOMINA FARMA (S)":8894.36};
+JULP['alberto_go_f']={"NEOQ (G)":225.66,"NEOQ (S)":21.22,"EURO (G)":12.04,"MULTILAB (S)":123.05,"ZYDUS (G)":192.69,"GERMED (G)":116.45,"MEDLEY (G)":238.05,"GEOLAB (S)":44.07,"PHARLAB (G)":120.06,"VITAMEDIC (G)":169.17,"BIOLAB (G)":457.65,"GREENPHARMA (G)":356.02,"PHARMASCIENCE (S)":249.27,"GEOLAB (G)":33.43,"NEOQ (VIT)":445.38,"NATULAB":44.93,"AIRELA (S)":257.39,"MAKROFARMA (S)":1177.84,"BIOLAB (S)":356.83,"DELTA (S)":23.78,"VITAMEDIC (S)":121.39,"CAZI (S)":181.37,"BELFAR (S)":146.76,"NATIVITA (S)":449.20,"GLOBO (G)":215.33,"NUTIVIT":1008.02,"LEGRAND (S)":17.47,"CIMED (S)":5621.12,"UNIAOQ (G)":177.50,"UNICHEM":1382.67,"SANDOZ (S)":241.71,"EMS (S)":218.60,"PHARLAB (S)":84.42,"MEDQ (S)":4052.31,"ALMEIDA PRADO (S)":36386.52,"DELTA (G)":210.64,"LEBON":217.40,"BIOCHIMICO":156.58,"GLOBO (S)":133.67,"IMEC (S)":52.43,"BELFAR (G)":829.59,"BRASTERAPICA (S)":52.14,"CIFARMA (S)":16560.49,"GREENPHARMA (S)":168.64,"BLAU":166.96,"NATIVITA (G)":69.47,"SANDOZ (G)":-42.97,"MERCK (G)":-5821.51,"UNIAOQ (S)":-389.06};
+JULP['alberto_go_h']={"ABOVE":4855.51,"DANA":6767.23,"COTY":3558.75,"PRUDENCE":14067.11,"BIO INSTINTO":953.52,"FARMAX (S)":894.92,"ARTE NATIVA (S)":185.10,"GRANADO":2489.26,"G-TECH":41.74,"KATIGUA":211.54,"NUTRIEX":150.18,"VIDORA":276.36,"FINI":64.54,"HERBAMED (S)":92.09,"CONFIRME":111.54,"SANFARMA (S)":81.85,"DOMINA FARMA (S)":128.97,"BELLAPHYTUS":324.37,"ABELHA RAINHA":1150.08,"FORTLIFE (CONSUMO)":30.08,"ZIINZIIN (S)":60.82,"UNIPHAR":26.09};
+JULP['alberto_pr_f']={"NEOQ (S)":69.54,"NEOQ (G)":64.17,"NATULAB":121.76,"LEGRAND (S)":125.78,"TEUTO (G)":97.81,"EMS (S)":210.15,"EURO (G)":85.25,"MULTILAB (S)":61.58,"TEUTO (S)":87.57,"CAZI (S)":241.64,"SANDOZ (G)":234.52,"DELTA (S)":42.94,"PHARLAB (G)":65.76,"GEOLAB (S)":50.31,"PHARMASCIENCE (S)":90.88,"AIRELA (S)":108.05,"PHARMASCIENCE (G)":158.69,"GEOLAB (G)":43.43,"PHARLAB (S)":113.07,"ZYDUS (G)":33.52,"BRASTERAPICA (S)":244.21,"LEGRAND (G)":34.00,"BELFAR (S)":160.86,"VITAMEDIC (G)":86.48,"UNIAOQ (S)":145.31,"NEOQ (VIT)":21.85,"LEBON":81.57,"WALDEMIRO PEREIRA (S)":46.70,"MAKROFARMA (S)":80.73,"IMEC (S)":64.06,"VITAMEDIC (S)":36.87,"GREENPHARMA (S)":23.18,"CRISTALIA":35.84,"NATIVITA (S)":285.82,"GREENPHARMA (G)":31.05,"BIOCHIMICO":46.13,"MEDQ (S)":51.75,"NATIVITA (G)":887.75,"DELTA (G)":117.13,"GLOBO (G)":20.05,"MEDQ (G)":94.39,"BLAU":54.94,"BELFAR (G)":20.91};
+JULP['alberto_pr_h']={"G-TECH":120.14,"FARMAX (S)":191.15,"BIO INSTINTO":48.94,"FINI":96.86,"GRANADO":211.63,"HERBAMED (S)":63.46,"KATIGUA":82.06,"ARTE NATIVA (S)":69.37,"MEDLEVENSOHN (S)":151.34,"NUTRIN (S)":174.93,"SANFARMA (S)":79.43,"PRUDENCE":59.41,"CONFIRME":90.59,"VIDORA":58.99,"LANSINOH":126.04,"ABOVE":80.24,"FORTLIFE (CONSUMO)":53.74,"BELLAPHYTUS":94.65,"NUTRIEX":52.93,"DANA":274.87,"ZIINZIIN (S)":70.87,"SINTER":64.94,"SUNLESS":3816.92,"UNIPHAR":38.04,"ABELHA RAINHA":61.43};
 let julGer='lucilene', julRec=0;
 function buildJulRec(){
  const box=document.getElementById('julRec');
@@ -889,9 +910,11 @@ function buildJulRec(){
 }
 function renderJulho(){
  const rec=JUL[julGer][julRec]; if(!rec)return;
- const [meta,nf,est,poss,risco]=rec.t;
+ const marcas=combineJul(rec.keys);
+ let meta=0,nf=0,est=0,poss=0,risco=0;
+ marcas.forEach(m=>{meta+=m.meta;nf+=m.nf;est+=m.est;poss+=m.poss;if(m.meta>0&&m.st==='risco')risco++;});
  const at=meta>0?nf/meta*100:0;
- const cobP=poss/meta*100;
+ const cobP=meta>0?poss/meta*100:0;
  document.getElementById('julKpis').innerHTML=`
   <div class="kpi"><div class="label">Meta do mês</div><div class="value">${compactBRL(meta)}</div><div class="foot">R$ ${fmtBRL(meta)}</div></div>
   <div class="kpi ${at>=100?'green':(at>=60?'amber':'red')}"><div class="label">Realizado (NF)</div><div class="value ${at>=100?'green':(at<60?'red':'')}">${compactBRL(nf)}</div><div class="foot">${pct(at)} da meta</div></div>
@@ -899,10 +922,9 @@ function renderJulho(){
   <div class="kpi ${cobP>=100?'green':'amber'}"><div class="label">Possibilidade de venda</div><div class="value">${compactBRL(poss)}</div><div class="foot">${pct(cobP)} da meta em estoque</div></div>
   <div class="kpi ${risco>0?'red':'green'}"><div class="label">Marcas em risco</div><div class="value ${risco>0?'red':'green'}">${risco}</div><div class="foot">estoque não cobre a meta</div></div>`;
  /* resumo de contagem de marcas com meta */
- const fd=(typeof JULM!=='undefined')?(JULM[julGer+'_'+rec.k]||[]):[];
- const comMeta=fd.filter(m=>m[1]>0);
+ const comMeta=marcas.filter(m=>m.meta>0);
  let cAt=0,cProj=0,cNao=0;
- comMeta.forEach(m=>{const a=m[2]/m[1]*100; if(a>=100)cAt++; else if(a*23/15>=100)cProj++; else cNao++;});
+ comMeta.forEach(m=>{const a=m.nf/m.meta*100; if(a>=100)cAt++; else if(m.proj!=null&&m.proj>=100)cProj++; else cNao++;});
  const nTot=comMeta.length||1;
  document.getElementById('julResumo').innerHTML=`
   <div class="kpi"><div class="label">Marcas com meta</div><div class="value">${comMeta.length}</div><div class="foot">no recorte</div></div>
@@ -911,35 +933,36 @@ function renderJulho(){
   <div class="kpi red"><div class="label">Não projetam atingir</div><div class="value red">${cNao}</div><div class="foot">${(cNao/nTot*100).toFixed(0)}% • ritmo insuficiente</div></div>`;
  const tb=document.querySelector('#julRisco tbody'); tb.innerHTML='';
  document.getElementById('julRiscoTitle').textContent=`Marcas em risco — ${rec.l} (${mgrNames[julGer]})`;
- if(!rec.r.length){
+ const risk=marcas.filter(m=>m.meta>0&&m.st==='risco');
+ if(!risk.length){
    tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--verde);font-weight:700;padding:22px">✓ Nenhuma marca em risco neste recorte — o estoque cobre todas as metas.</td></tr>';
    document.getElementById('julNote').textContent='Todas as marcas têm estoque suficiente (ou projeção que já atinge a meta) neste recorte.';
  }else{
-   rec.r.slice().sort((a,b)=>a[3]-b[3]).forEach(m=>{
-     const p=m[1]>0?m[2]/m[1]*100:0;
-     tb.innerHTML+=`<tr><td><b>${m[0]}</b></td><td>${fmtBRL(m[1])}</td><td>${fmtBRL(m[2])}</td><td class="neg">${pct(p)}</td><td class="neg" style="font-weight:700">${fmtBRL(m[3])}</td></tr>`;
+   risk.slice().sort((a,b)=>(a.poss-a.meta)-(b.poss-b.meta)).forEach(m=>{
+     const p=m.meta>0?m.nf/m.meta*100:0; const falta=m.poss-m.meta;
+     tb.innerHTML+=`<tr><td><b>${m.n}</b></td><td>${fmtBRL(m.meta)}</td><td>${fmtBRL(m.nf)}</td><td class="neg">${pct(p)}</td><td class="neg" style="font-weight:700">${fmtBRL(falta)}</td></tr>`;
    });
    document.getElementById('julNote').innerHTML='<b>Falta p/ meta (após estoque)</b> = quanto ainda falta para bater a meta mesmo esgotando toda a possibilidade de venda em estoque. Ordenado do maior déficit para o menor.';
  }
  /* tabela completa */
- const full=(typeof JULM!=='undefined')?JULM[julGer+'_'+rec.k]:null;
  const ftb=document.querySelector('#julFull tbody');
  document.getElementById('julFullTitle').textContent=`Todas as marcas — ${rec.l} (${mgrNames[julGer]})`;
  ftb.innerHTML='';
- if(!full||!full.length){
-   ftb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--txt2);padding:18px">Detalhe por marca não carregado para este recorte.</td></tr>';
+ const badge=s=>s==='ok'?'<span class="pos">Projeção atinge</span>':(s==='risco'?'<span class="neg">Insuficiente</span>':'Estoque cobre');
+ const shown=marcas.filter(m=>m.meta>0||m.nf!==0||m.est>0).sort((a,b)=>b.meta-a.meta);
+ if(!shown.length){
+   ftb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--txt2);padding:18px">Sem dados para este recorte.</td></tr>';
  }else{
-   const badge=s=>s==='ok'?'<span class="pos">Projeção atinge</span>':(s==='risco'?'<span class="neg">Insuficiente</span>':'Estoque cobre');
-   full.slice().sort((a,b)=>b[1]-a[1]).forEach(m=>{
-     const p=m[1]>0?m[2]/m[1]*100:null;
+   shown.forEach(m=>{
+     const p=m.meta>0?m.nf/m.meta*100:null;
      const pc=p==null?'—':`<span class="${p>=100?'pos':(p<60?'neg':'')}">${pct(p)}</span>`;
-     const pj=p==null?'—':`<span class="${(p*23/15)>=100?'pos':((p*23/15)<80?'neg':'')}">${pct(p*23/15)}</span>`;
-     const proj=m[2]*23/15, gap=m[1]-m[4];
+     const pj=(m.proj==null)?'—':`<span class="${m.proj>=100?'pos':(m.proj<80?'neg':'')}">${pct(m.proj)}</span>`;
+     const gap=m.meta-m.poss;
      let motivo;
-     if(m[5]==='ok')motivo=`Projeção de R$ ${fmtBRL(proj)} já atinge a meta de R$ ${fmtBRL(m[1])}.`;
-     else if(m[5]==='risco')motivo=`Projeção (R$ ${fmtBRL(proj)}) abaixo da meta e o estoque só cobre R$ ${fmtBRL(m[4])} — faltam R$ ${fmtBRL(gap)} para a meta.`;
-     else motivo=`Projeção (R$ ${fmtBRL(proj)}) abaixo da meta, mas o estoque permite vender até R$ ${fmtBRL(m[4])}, cobrindo o que falta.`;
-     ftb.innerHTML+=`<tr><td>${m[0]}</td><td>${fmtBRL(m[1])}</td><td>${fmtBRL(m[2])}</td><td>${pc}</td><td>${pj}</td><td>${fmtBRL(m[3])}</td><td>${fmtBRL(m[4])}</td><td style="min-width:240px">${badge(m[5])}<div style="font-size:11px;color:var(--txt2);margin-top:3px;line-height:1.35">${motivo}</div></td></tr>`;
+     if(m.st==='ok')motivo='Projeção do mês já atinge a meta.';
+     else if(m.st==='risco')motivo=`Estoque só cobre R$ ${fmtBRL(m.poss)} — faltam R$ ${fmtBRL(gap)} para a meta.`;
+     else motivo=`Projeção abaixo da meta, mas o estoque permite vender até R$ ${fmtBRL(m.poss)}, cobrindo o que falta.`;
+     ftb.innerHTML+=`<tr><td>${m.n}</td><td>${fmtBRL(m.meta)}</td><td>${fmtBRL(m.nf)}</td><td>${pc}</td><td>${pj}</td><td>${fmtBRL(m.est)}</td><td>${fmtBRL(m.poss)}</td><td title="${motivo}" style="cursor:help">${badge(m.st)}</td></tr>`;
    });
  }
 }
