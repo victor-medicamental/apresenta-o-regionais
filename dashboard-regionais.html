@@ -323,7 +323,7 @@
       <div class="table-scroll" style="max-height:620px;overflow-y:auto"><table id="julFull">
         <thead><tr><th>Marca</th><th>Meta</th><th>Total NF</th><th>% Atingido</th><th>% Projeção</th><th>Valor Estoque</th><th>Possib. Venda</th><th>Meta atingível?</th></tr></thead><tbody></tbody>
       </table></div>
-      <p class="note">Ordenado por meta (maior → menor). <span class="pos">Verde</span> = projeção já atinge a meta; <b>Estoque cobre</b> = meta atingível com o estoque disponível; <span class="neg">Insuficiente</span> = estoque não cobre a meta. Marcas com meta zero e sem faturamento foram omitidas.</p>
+      <p class="note">Ordenado por meta (maior → menor). <b>Meta atingível?</b> compara o que <b>falta</b> (meta − realizado) com a <b>possibilidade de venda</b>: <span class="pos">Atingível</span> = a possibilidade de venda cobre o que falta; <span class="pos">Meta atingida</span> = realizado já ≥ meta; <span class="neg">Não atingível</span> = a possibilidade de venda não cobre o que falta. Passe o mouse na situação para ver o detalhe. Marcas com meta zero foram omitidas do indicador.</p>
     </div>
   </section>
 </main>
@@ -898,7 +898,7 @@ function renderJulho(){
  const rec=JUL[julGer][julRec]; if(!rec)return;
  const key=julGer+'_'+rec.k;
  const raw=(typeof JULM!=='undefined'&&JULM[key])?JULM[key]:[];
- const marcas=raw.map(m=>({n:m[0],meta:m[1],nf:m[2],proj:m[3],est:m[4],poss:m[5],st:m[6]}));
+ const marcas=raw.map(m=>{const meta=m[1],nf=m[2],poss=m[5],g=meta-nf;let st;if(meta<=0)st='na';else if(g<=0)st='ok';else if(poss>=g)st='estq';else st='risco';return {n:m[0],meta:meta,nf:nf,proj:m[3],est:m[4],poss:poss,st:st};});
  let meta=0,nf=0,est=0,poss=0;
  marcas.forEach(m=>{meta+=m.meta;nf+=m.nf;est+=m.est;poss+=m.poss;});
  const at=meta>0?nf/meta*100:0;
@@ -925,7 +925,7 @@ function renderJulho(){
  const ftb=document.querySelector('#julFull tbody');
  document.getElementById('julFullTitle').textContent=`Todas as marcas — ${rec.l} (${mgrNames[julGer]})`;
  ftb.innerHTML='';
- const badge=s=>s==='ok'?'<span class="pos">Projeção atinge</span>':(s==='risco'?'<span class="neg">Insuficiente</span>':'Estoque cobre');
+ const badge=s=>s==='ok'?'<span class="pos">Meta atingida</span>':(s==='estq'?'<span class="pos">Atingível</span>':(s==='risco'?'<span class="neg">Não atingível</span>':'<span style="color:var(--txt2)">—</span>'));
  let shown=marcas.filter(m=>m.meta>0||m.nf!==0||m.est>0);
  if(julFilterMode!=='todas'){
    shown=shown.filter(m=>{
@@ -945,11 +945,12 @@ function renderJulho(){
      const p=m.meta>0?m.nf/m.meta*100:null;
      const pc=p==null?'—':`<span class="${p>=100?'pos':(p<60?'neg':'')}">${pct(p)}</span>`;
      const pj=(m.proj==null)?'—':`<span class="${m.proj>=100?'pos':(m.proj<80?'neg':'')}">${pct(m.proj)}</span>`;
-     const gap=m.meta-m.poss;
+     const g=m.meta-m.nf;
      let motivo;
-     if(m.st==='ok')motivo='Projeção do mês já atinge a meta.';
-     else if(m.st==='risco')motivo=`Estoque só cobre R$ ${fmtBRL(m.poss)} — faltam R$ ${fmtBRL(gap)} para a meta.`;
-     else motivo=`Projeção abaixo da meta, mas o estoque permite vender até R$ ${fmtBRL(m.poss)}, cobrindo o que falta.`;
+     if(m.meta<=0)motivo='Sem meta no mês.';
+     else if(g<=0)motivo=`Meta já atingida — realizado R$ ${fmtBRL(m.nf)} ≥ meta R$ ${fmtBRL(m.meta)}.`;
+     else if(m.poss>=g)motivo=`Faltam R$ ${fmtBRL(g)} p/ a meta; possibilidade de venda R$ ${fmtBRL(m.poss)} cobre.`;
+     else motivo=`Faltam R$ ${fmtBRL(g)} p/ a meta; possibilidade de venda R$ ${fmtBRL(m.poss)} não cobre (falta R$ ${fmtBRL(g-m.poss)}).`;
      ftb.innerHTML+=`<tr><td>${m.n}</td><td>${fmtBRL(m.meta)}</td><td>${fmtBRL(m.nf)}</td><td>${pc}</td><td>${pj}</td><td>${fmtBRL(m.est)}</td><td>${fmtBRL(m.poss)}</td><td title="${motivo}" style="cursor:help">${badge(m.st)}</td></tr>`;
    });
  }
