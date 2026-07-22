@@ -322,7 +322,7 @@
         <button data-jf="nao">Não projetam atingir</button>
       </div>
       <div class="table-scroll" style="max-height:620px;overflow-y:auto"><table id="julFull">
-        <thead><tr><th>Marca</th><th>Meta</th><th>Total NF</th><th>% Atingido</th><th>% Projeção</th><th>Valor Estoque</th><th>Possib. Venda</th><th>Meta atingível?</th></tr></thead><tbody></tbody>
+        <thead><tr><th>Marca</th><th>Meta</th><th>Total NF</th><th>% Atingido</th><th>% Projeção</th><th>Projeção R$</th><th>Valor Estoque</th><th>Possib. Venda</th><th>Meta atingível?</th></tr></thead><tbody></tbody>
       </table></div>
       <p class="note">Ordenado por meta (maior → menor). <b>Meta atingível?</b> compara o que <b>falta</b> (meta − realizado) com a <b>possibilidade de venda</b>: <span class="pos">Atingível</span> = a possibilidade de venda cobre o que falta; <span class="pos">Meta atingida</span> = realizado já ≥ meta; <span class="neg">Não atingível</span> = a possibilidade de venda não cobre o que falta. Passe o mouse na situação para ver o detalhe. Marcas com meta zero foram omitidas do indicador.</p>
     </div>
@@ -953,19 +953,20 @@ function renderJulho(){
  }
  shown=shown.sort((a,b)=>b.meta-a.meta);
  if(!shown.length){
-   ftb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--txt2);padding:18px">Sem dados para este recorte.</td></tr>';
+   ftb.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--txt2);padding:18px">Sem dados para este recorte.</td></tr>';
  }else{
    shown.forEach(m=>{
      const p=m.meta>0?m.nf/m.meta*100:null;
      const pc=p==null?'—':`<span class="${p>=100?'pos':(p<60?'neg':'')}">${pct(p)}</span>`;
      const pj=(m.proj==null)?'—':`<span class="${m.proj>=100?'pos':(m.proj<80?'neg':'')}">${pct(m.proj)}</span>`;
+     const pjRS=(m.proj!=null&&m.meta>0)?fmtBRL(m.proj/100*m.meta):'—';
      const g=m.meta-m.nf;
      let motivo;
      if(m.meta<=0)motivo='Sem meta no mês.';
      else if(g<=0)motivo=`Meta já atingida — realizado R$ ${fmtBRL(m.nf)} ≥ meta R$ ${fmtBRL(m.meta)}.`;
      else if(m.poss>=g)motivo=`Faltam R$ ${fmtBRL(g)} p/ a meta; possibilidade de venda R$ ${fmtBRL(m.poss)} cobre.`;
      else motivo=`Faltam R$ ${fmtBRL(g)} p/ a meta; possibilidade de venda R$ ${fmtBRL(m.poss)} não cobre (falta R$ ${fmtBRL(g-m.poss)}).`;
-     ftb.innerHTML+=`<tr><td>${m.n}</td><td>${fmtBRL(m.meta)}</td><td>${fmtBRL(m.nf)}</td><td>${pc}</td><td>${pj}</td><td>${fmtBRL(m.est)}</td><td>${fmtBRL(m.poss)}</td><td title="${motivo}" style="cursor:help">${badge(m.st)}</td></tr>`;
+     ftb.innerHTML+=`<tr><td>${m.n}</td><td>${fmtBRL(m.meta)}</td><td>${fmtBRL(m.nf)}</td><td>${pc}</td><td>${pj}</td><td>${pjRS}</td><td>${fmtBRL(m.est)}</td><td>${fmtBRL(m.poss)}</td><td title="${motivo}" style="cursor:help">${badge(m.st)}</td></tr>`;
    });
  }
 }
