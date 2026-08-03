@@ -298,7 +298,10 @@
   <section class="panel" id="iqvia">
     <h2 class="section">IQVIA — Mercado Independente × Medicamental (Trimestre Abr–Jun/2026)</h2>
     <p class="lead" id="iqviaLead"></p>
-    <div class="toggle-row" style="align-items:center"><label style="font-size:13px;color:var(--txt2);margin-right:8px;font-weight:600">Filtrar por supervisor:</label>
+    <div class="toggle-row" style="align-items:center;flex-wrap:wrap;gap:8px">
+      <span id="iqvGerWrap" style="display:none"><label style="font-size:13px;color:var(--txt2);margin-right:8px;font-weight:600">Gerente:</label>
+        <select id="iqvGerSel" style="padding:7px 10px;border:1px solid #cfd8e3;border-radius:6px;font-size:13px;min-width:180px;background:#fff"></select></span>
+      <label style="font-size:13px;color:var(--txt2);margin:0 8px 0 6px;font-weight:600">Supervisor:</label>
       <select id="iqvSupSel" style="padding:7px 10px;border:1px solid #cfd8e3;border-radius:6px;font-size:13px;min-width:260px;background:#fff"></select>
     </div>
     <div class="kpi-grid" id="iqviaKpis"></div>
@@ -685,6 +688,7 @@ DADOS.empresa.mkMetas.forEach(mm=>{if(mm.p==null)mm.p=mm.pct;if(mm.pr==null)mm.p
 /* ===== estado ===== */
 let cur='empresa', olMode='com', canalMode='web', mkFilterMode='meta';
 let iqvSup='todos';
+let iqvGer='todos';
 const charts={};
 function mk(id,cfg){const el=document.getElementById(id);if(!el)return;if(charts[id]){charts[id].destroy();}charts[id]=new Chart(el,cfg);}
 function D(){return DADOS[cur];}
@@ -901,7 +905,18 @@ function buildMkTable(data){
 /* ===== RENDER GERAL ===== */
 function renderIqvia(){
  const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
- const d=IQV[cur], nome=(DADOS[cur]&&DADOS[cur].nome)||'';
+ const emp=(cur==='empresa'), GKEYS=['lucilene','rosa','mauro','alberto'];
+ const gerWrap=document.getElementById('iqvGerWrap'), gerSel=document.getElementById('iqvGerSel');
+ gerWrap.style.display=emp?'':'none';
+ if(!emp) iqvGer='todos';
+ if(emp){
+  if(iqvGer!=='todos' && !IQV[iqvGer]) iqvGer='todos';
+  gerSel.innerHTML='<option value="todos">Todos os gerentes</option>'+GKEYS.filter(k=>IQV[k]).map(k=>'<option value="'+k+'">'+((DADOS[k]&&DADOS[k].nome)||k)+'</option>').join('');
+  gerSel.value=iqvGer;
+  gerSel.onchange=()=>{iqvGer=gerSel.value;iqvSup='todos';renderIqvia();};
+ }
+ const d = emp ? (iqvGer==='todos'?IQV.empresa:IQV[iqvGer]) : IQV[cur];
+ const nome = emp ? (iqvGer==='todos'?'EMPRESA (todos os gerentes)':((DADOS[iqvGer]&&DADOS[iqvGer].nome)||iqvGer)) : ((DADOS[cur]&&DADOS[cur].nome)||'');
  const sel=document.getElementById('iqvSupSel'), kp=document.getElementById('iqviaKpis'), lead=document.getElementById('iqviaLead');
  if(!d){lead.textContent='Sem dados IQVIA para esta visão.';kp.innerHTML='';sel.innerHTML='';['g_iqviaTop','g_iqviaSup'].forEach(id=>{if(charts[id]){charts[id].destroy();delete charts[id];}});document.querySelector('#iqviaTable tbody').innerHTML='';return;}
  if(iqvSup!=='todos' && !d.sups.some(s=>s.s===iqvSup)) iqvSup='todos';
