@@ -464,7 +464,7 @@ const DADOS={
   mkSem:[{n:'MEDLEY (G)',nf:93614.68,pr:103468.86},{n:'HADASSAH',nf:26538.35,pr:69663.17},{n:'DANONE',nf:9676.40,pr:33867.40},{n:'CIMED (S)',nf:8064.43,pr:8913.32},{n:'SANOFI (S)',nf:6922.76,pr:9691.86},{n:'NUTRATA',nf:5399.28,pr:6669.70},{n:'UNIPHAR',nf:2824.42,pr:2965.64},{n:'ABELHA RAINHA',nf:2614.04,pr:3921.06},{n:'PARAIBUNA',nf:2561.74,pr:3586.44},{n:'DENTALCLEAN',nf:2402.87,pr:2803.35},{n:'FLOPI',nf:1934.72,pr:3385.76},{n:'ALMEIDA PRADO (S)',nf:1394.37,pr:2252.44},{n:'MERCK (G)',nf:1127.07,pr:2151.68},{n:'BANANA BRASIL',nf:741.27,pr:2594.45},{n:'HEALTHY (S)',nf:460.09,pr:1207.74},{n:'EMANA',nf:401.78,pr:2109.35},{n:'BLACK & DECKER',nf:47.63,pr:333.41},{n:'MEDLEY (S)',nf:4.03,pr:84.63},{n:'ALQUIMIA',nf:-70.45,pr:-369.86},{n:'ALTHAIA (G)',nf:-53.29,pr:null},{n:'AVVIO',nf:-287.76,pr:null}]
  },
  mauro:{
-  nome:'MAURO', regiao:'Reg. IV RJ (resp. Kris — lic. maternidade)',
+  nome:'MAURO', regiao:'',
   vis:{foR:79.95,foV:5428.52,foC:6790.14,foFalta:-1361616,foVmd:258501,faR:82.66,faV:5207.58,faC:6300.00,faFalta:-1092422,faVmd:247980,rent:21.63,pos:77.60,prazo:45.42,inad:0.87,du:21,dur:0},
   sup:[
    {n:'MAURO SILVA (RJ I)',vend:9,cota:1650000,farma:451564.67,promo:522918.15,hpc:225252.83,eletr:110464.06,tf:1310199.71,proj:79.41,ol:28003.12,total:1338202.83,rent:21.95,inad:0.80,posi:82.83,prazo:43.64},
@@ -639,7 +639,7 @@ DADOS.rosa.mkMetas.forEach(m=>{if(m.p==null)m.p=m.pct;if(m.pr==null)m.pr=(m.nf==
 /*END_UPD_LUC_HPC_ROSA*/
 
 /*UPD_KRIS_20260803*/
-DADOS.mauro.nome='Regional RJ';DADOS.mauro.regiao='Mauro subst. Kris';
+DADOS.mauro.nome='Regional RJ';DADOS.mauro.regiao='';
 DADOS.mauro.vis={"foR": 79.95, "foV": 5656.85, "foC": 7075.47, "foFalta": -1418616, "foVmd": 245950, "faR": 82.38, "faV": 5495.03, "faC": 6670.0, "faFalta": -1174968, "faVmd": 238914, "rent": 21.66, "pos": 77.5, "prazo": 44.2, "inad": 0.75, "du": 23, "dur": 0};
 DADOS.mauro.supTotPct={"rent": 21.49, "inad": 0.75, "posi": 67.83, "prazo": 44.29, "vend": 46};DADOS.mauro.supNota='';
 DADOS.mauro.sup=[{"n": "MAURO SILVA (RJ I)", "vend": 9, "cota": 1750000, "farma": 536060.38, "promo": 721563.33, "hpc": 194557.46, "eletr": 124352.95, "tf": 1576534.12, "proj": 90.09, "ol": 72725.32, "total": 1649259.44, "rent": 20.75, "inad": 0.9, "posi": 75.43, "prazo": 40.78}, {"n": "LAURO SILVA (RJ II)", "vend": 10, "cota": 1320000, "farma": 277148.52, "promo": 386789.24, "hpc": 110311.23, "eletr": 153422.61, "tf": 927671.6, "proj": 70.28, "ol": 31010.79, "total": 958682.39, "rent": 22.18, "inad": 0.57, "posi": 72.42, "prazo": 47.35}, {"n": "LUCIANO (RJ III)", "vend": 15, "cota": 1560000, "farma": 538105.41, "promo": 452274.93, "hpc": 187585.69, "eletr": 250253.35, "tf": 1428219.58, "proj": 91.55, "ol": 7748.4, "total": 1435967.98, "rent": 21.13, "inad": 0.57, "posi": 80.81, "prazo": 44.06}, {"n": "ELIAS (RJ V)", "vend": 11, "cota": 1790000, "farma": 602660.01, "promo": 639247.97, "hpc": 149121.62, "eletr": 168884.67, "tf": 1559914.27, "proj": 87.15, "ol": 20071.29, "total": 1579985.56, "rent": 21.98, "inad": 0.51, "posi": 79.66, "prazo": 45.81}, {"n": "FERNANDA ALVES (MC)", "vend": 1, "cota": 250000, "farma": 0, "promo": 0, "hpc": -767.45, "eletr": 3460.36, "tf": 47348.11, "proj": 18.94, "ol": 30262.39, "total": 32955.3, "rent": 17.04, "inad": 0.0, "posi": 5.72, "prazo": 58.05}];
@@ -842,7 +842,7 @@ function D(){return DADOS[cur];}
 function renderVisao(){
  const d=D(),v=d.vis;
  document.getElementById('ttlRegfat').textContent=(cur==='empresa')?'Faturamento por Gerente — Acumulado':'Faturamento por Supervisor — Acumulado';
- document.getElementById('visaoLead').innerHTML=`Painel "Performance Equipe" — <b>Gerente ${d.nome} · ${d.regiao}</b>. Base: mês corrente (${v.du} dias úteis, ${v.dur} restantes).`;
+ document.getElementById('visaoLead').innerHTML=`Painel "Performance Equipe" — <b>Gerente ${d.nome}${d.regiao?(" · "+d.regiao):""}</b>. Base: mês corrente (${v.du} dias úteis, ${v.dur} restantes).`;
  const faltaK=(val)=>val>=0?`<div class="kpi green"><div class="label">Falta p/ Meta</div><div class="value green">+${compactBRL(val)}</div><div class="foot">meta superada</div></div>`:`<div class="kpi red"><div class="label">Falta p/ Meta</div><div class="value red">${compactBRL(val)}</div><div class="foot">R$ ${fmtBRL(val)}</div></div>`;
  document.getElementById('kpiVisao').innerHTML=`
   <div class="kpi ${v.foR>=100?'green':''}"><div class="label">Realizado Farma + OL x Cota</div><div class="value ${v.foR>=100?'green':''}">${pct(v.foR)}</div><div class="foot">${v.foV.toLocaleString('pt-BR')} Mil de ${v.foC.toLocaleString('pt-BR')} Mil</div></div>
@@ -901,7 +901,7 @@ function renderSup(){
 /* ===== GERENTE ===== */
 function renderGer(){
  const d=D(),g=d.ger;
- document.getElementById('gerTitle').textContent=`Scorecard do Gerente — ${d.nome} (${d.regiao})`;
+ document.getElementById('gerTitle').textContent=`Scorecard do Gerente — ${d.nome}${d.regiao?(" ("+d.regiao+")"):""}`;
  document.getElementById('gerLead').innerHTML=`Placar total <b>${g.placar}</b> pontos · Score/Nível <b>${g.nivel}</b> · Performance <b>${pct(g.perf)}</b>.`;
  document.getElementById('kpiGer').innerHTML=`
   <div class="kpi"><div class="label">Placar Total</div><div class="value">${g.placar.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div></div>
